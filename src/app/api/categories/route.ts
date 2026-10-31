@@ -10,7 +10,7 @@ export async function GET(req: NextRequest) {
   const { searchParams } = new URL(req.url);
   const kind = searchParams.get("kind");
   const validKind = kind === "event" || kind === "place" ? (kind as CategoryKind) : undefined;
-  const categories = listCategories(validKind);
+  const categories = await listCategories(validKind);
   return json({ data: categories, meta: { total: categories.length } });
 }
 

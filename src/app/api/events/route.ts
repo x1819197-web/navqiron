@@ -24,7 +24,7 @@ export async function GET(req: NextRequest) {
     status = requestedStatus;
   }
 
-  const events = listEvents({
+  const events = await listEvents({
     status,
     category: searchParams.get("category") ?? undefined,
     query: searchParams.get("q") ?? undefined,
@@ -45,13 +45,13 @@ export async function POST(req: NextRequest) {
   const { data, errors } = parseEventInput(body);
   if (Object.keys(errors).length) return fail("Ma'lumotlar to'liq emas", 422, errors);
 
-  const category = findCategory(data.categoryId);
+  const category = await findCategory(data.categoryId);
   if (!category || category.kind !== "event") {
     return fail("Tadbir kategoriyasi noto'g'ri", 422, { categoryId: "Kategoriya topilmadi" });
   }
 
-  data.slug = uniqueSlug("events", typeof body.slug === "string" ? body.slug : data.title);
-  const event = createEvent(data);
+  data.slug = await uniqueSlug("events", typeof body.slug === "string" ? body.slug : data.title);
+  const event = await createEvent(data);
   return json({ data: event }, 201);
 }
 

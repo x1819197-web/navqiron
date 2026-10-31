@@ -14,10 +14,10 @@ export async function GET(
 
   const { id } = await params;
   const numeric = Number(id);
-  const event = Number.isInteger(numeric) ? getEventById(numeric) : getEventBySlug(id);
+  const event = Number.isInteger(numeric) ? await getEventById(numeric) : await getEventBySlug(id);
   if (!event) return fail("Tadbir topilmadi", 404);
 
-  const registrations = listRegistrations(event.id);
+  const registrations = await listRegistrations(event.id);
   return json({ data: registrations, meta: { total: registrations.length } });
 }
 

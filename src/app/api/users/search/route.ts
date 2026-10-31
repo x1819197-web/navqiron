@@ -10,7 +10,7 @@ export async function GET(req: NextRequest) {
   const viewer = await getUserSession();
   if (!viewer) return fail("Avval tizimga kiring", 401);
   const query = req.nextUrl.searchParams.get("q") ?? "";
-  return json({ data: searchUsers(viewer.id, query) });
+  return json({ data: await searchUsers(viewer.id, query) });
 }
 
 export function OPTIONS() {

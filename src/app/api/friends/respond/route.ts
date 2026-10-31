@@ -17,7 +17,7 @@ export async function POST(req: Request) {
     return fail("So'rov ma'lumotlari noto'g'ri", 422);
   }
 
-  const ok = respondToRequest(viewer.id, id, action === "accept");
+  const ok = await respondToRequest(viewer.id, id, action === "accept");
   if (!ok) return fail("So'rov topilmadi", 404);
   return json({ data: { ok: true } });
 }

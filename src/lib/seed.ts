@@ -1,4 +1,4 @@
-import type { DatabaseSync } from "node:sqlite";
+import type { Database } from "./db";
 import { hashPassword } from "./password";
 
 const TASHKENT_OFFSET_HOURS = 5;
@@ -406,127 +406,87 @@ const FEMALE_LAST = [
   "Nurmatova", "Alimova", "Jalolova", "Mirzayeva", "Xasanova", "Aripova",
 ];
 
+const q = (value: string | number | null): string =>
+  value === null ? "NULL" : typeof value === "number" ? String(value) : `'${value.replace(/'/g, "''")}'`;
+
 /** Fills the registrations table so admin lists match the seeded counts. */
-function seedRegistrations(db: DatabaseSync): void {
-  const events = db
-    .prepare("SELECT id, registered FROM events")
-    .all() as { id: number; registered: number }[];
-  const insert = db.prepare(
-    "INSERT OR IGNORE INTO registrations (event_id, name, phone, created_at) VALUES (?, ?, ?, ?)",
-  );
+function registrationStatements(): string[] {
+  const statements: string[] = [];
   let seq = 0;
-  db.exec("BEGIN");
-  try {
-    for (const event of events) {
-      for (let i = 0; i < event.registered; i++) {
-        const male = seq % 2 === 0;
-        const first = male
-          ? MALE_FIRST[(seq * 7) % MALE_FIRST.length]
-          : FEMALE_FIRST[(seq * 5) % FEMALE_FIRST.length];
-        const last = male
-          ? MALE_LAST[(seq * 11) % MALE_LAST.length]
-          : FEMALE_LAST[(seq * 13) % FEMALE_LAST.length];
-        const phone = `+99890${7_000_000 + seq}`;
-        const createdAt = new Date(
-          Date.now() - ((seq * 53) % (12 * 24)) * 3_600_000,
-        ).toISOString();
-        insert.run(event.id, `${first} ${last}`, phone, createdAt);
-        seq += 1;
-      }
+  for (const event of EVENTS) {
+    for (let i = 0; i < event.registered; i++) {
+      const male = seq % 2 === 0;
+      const first = male
+        ? MALE_FIRST[(seq * 7) % MALE_FIRST.length]
+        : FEMALE_FIRST[(seq * 5) % FEMALE_FIRST.length];
+      const last = male
+        ? MALE_LAST[(seq * 11) % MALE_LAST.length]
+        : FEMALE_LAST[(seq * 13) % FEMALE_LAST.length];
+      const phone = `+99890${7_000_000 + seq}`;
+      const createdAt = new Date(
+        Date.now() - ((seq * 53) % (12 * 24)) * 3_600_000,
+      ).toISOString();
+      statements.push(
+        `INSERT OR IGNORE INTO registrations (event_id, name, phone, created_at)
+         VALUES ((SELECT id FROM events WHERE slug = ${q(event.slug)}), ${q(`${first} ${last}`)}, ${q(phone)}, ${q(createdAt)});`,
+      );
+      seq += 1;
     }
-    db.exec("COMMIT");
-  } catch (err) {
-    db.exec("ROLLBACK");
-    throw err;
   }
+  return statements;
 }
 
-export function seedDatabase(db: DatabaseSync): void {
-  const existing = db.prepare("SELECT COUNT(*) AS c FROM events").get() as { c: number };
-  fetchAdminSeed(db);
-
+export async function seedDatabase(db: Database): Promise<void> {
+  await fetchAdminSeed(db);
+  const existing = await db.get("SELECT COUNT(*) AS c FROM events");
   if (Number(existing?.c ?? 0) > 0) return;
 
-  const insertCategory = db.prepare(
-    "INSERT OR IGNORE INTO categories (slug, name, color, icon, kind, sort) VALUES (?, ?, ?, ?, ?, ?)",
-  );
-  for (const category of CATEGORIES) {
-    insertCategory.run(
-      category.slug,
-      category.name,
-      category.color,
-      category.icon,
-      category.kind,
-      category.sort,
-    );
-  }
-
-  const categoryRows = db
-    .prepare("SELECT id, slug FROM categories")
-    .all() as { id: number; slug: string }[];
-  const categoryIds = new Map(categoryRows.map((row) => [row.slug, row.id]));
-
   const now = new Date().toISOString();
-  const insertEvent = db.prepare(
-    `INSERT INTO events
-      (slug, title, description, category_id, lat, lng, venue, address, starts_at, ends_at,
-       organizer, is_free, price, capacity, registered, status, created_at, updated_at)
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'published', ?, ?)`,
-  );
+  const statements: string[] = [];
+  for (const category of CATEGORIES) {
+    statements.push(
+      `INSERT OR IGNORE INTO categories (slug, name, color, icon, kind, sort)
+       VALUES (${q(category.slug)}, ${q(category.name)}, ${q(category.color)}, ${q(category.icon)}, ${q(category.kind)}, ${category.sort});`,
+    );
+  }
   for (const event of EVENTS) {
-    insertEvent.run(
-      event.slug,
-      event.title,
-      event.description,
-      categoryIds.get(event.category) ?? null,
-      event.lat,
-      event.lng,
-      event.venue,
-      event.address,
-      event.startsAt,
-      event.endsAt,
-      event.organizer,
-      event.isFree,
-      event.price,
-      event.capacity,
-      event.registered,
-      now,
-      now,
+    statements.push(
+      `INSERT INTO events
+        (slug, title, description, category_id, lat, lng, venue, address, starts_at, ends_at,
+         organizer, is_free, price, capacity, registered, status, created_at, updated_at)
+       VALUES (${q(event.slug)}, ${q(event.title)}, ${q(event.description)},
+         (SELECT id FROM categories WHERE slug = ${q(event.category)}),
+         ${event.lat}, ${event.lng}, ${q(event.venue)}, ${q(event.address)},
+         ${q(event.startsAt)}, ${q(event.endsAt)}, ${q(event.organizer)}, ${event.isFree},
+         ${q(event.price)}, ${event.capacity}, ${event.registered}, 'published', ${q(now)}, ${q(now)});`,
     );
   }
-
-  const insertPlace = db.prepare(
-    `INSERT INTO places
-      (slug, name, description, category_id, lat, lng, address, working_hours, phone, url,
-       status, created_at, updated_at)
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'published', ?, ?)`,
-  );
   for (const place of PLACES) {
-    insertPlace.run(
-      place.slug,
-      place.name,
-      place.description,
-      categoryIds.get(place.category) ?? null,
-      place.lat,
-      place.lng,
-      place.address,
-      place.workingHours,
-      place.phone,
-      place.url,
-      now,
-      now,
+    statements.push(
+      `INSERT INTO places
+        (slug, name, description, category_id, lat, lng, address, working_hours, phone, url,
+         status, created_at, updated_at)
+       VALUES (${q(place.slug)}, ${q(place.name)}, ${q(place.description)},
+         (SELECT id FROM categories WHERE slug = ${q(place.category)}),
+         ${place.lat}, ${place.lng}, ${q(place.address)}, ${q(place.workingHours)},
+         ${q(place.phone)}, ${q(place.url)}, 'published', ${q(now)}, ${q(now)});`,
     );
   }
-
-  seedRegistrations(db);
+  statements.push(...registrationStatements());
+  try {
+    await db.batch(statements);
+  } catch (error) {
+    // Another cold instance may have seeded concurrently; treat that as success.
+    const check = await db.get("SELECT COUNT(*) AS c FROM events");
+    if (Number(check?.c ?? 0) === 0) throw error;
+  }
 }
 
-function fetchAdminSeed(db: DatabaseSync): void {
-  const row = db.prepare("SELECT COUNT(*) AS c FROM admins").get() as { c: number };
+async function fetchAdminSeed(db: Database): Promise<void> {
+  const row = await db.get("SELECT COUNT(*) AS c FROM admins");
   if (Number(row?.c ?? 0) > 0) return;
-  db.prepare(
+  await db.run(
     "INSERT INTO admins (email, password_hash, name, created_at) VALUES (?, ?, ?, ?)",
-  ).run(
     "admin@navqiron.uz",
     hashPassword("navqiron2026"),
     "Navqiron administratori",

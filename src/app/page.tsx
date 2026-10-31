@@ -8,13 +8,13 @@ export const dynamic = "force-dynamic";
 
 export default async function HomePage() {
   const user = await getUserSession();
-  const going = user ? friendGoingCounts(user.id) : {};
-  const events = listEvents({ status: "published" }).map((event) => ({
+  const going = user ? await friendGoingCounts(user.id) : {};
+  const events = (await listEvents({ status: "published" })).map((event) => ({
     ...event,
     friendsGoing: going[event.id] ?? 0,
   }));
-  const places = listPlaces({ status: "published" });
-  const categories = listCategories();
+  const places = await listPlaces({ status: "published" });
+  const categories = await listCategories();
 
   return (
     <AppExperience

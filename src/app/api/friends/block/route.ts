@@ -15,7 +15,7 @@ export async function POST(req: Request) {
   const action = body.action === "unblock" ? "unblock" : "block";
   if (!userId) return fail("Foydalanuvchi tanlanmadi", 422);
 
-  const ok = action === "unblock" ? unblockUser(viewer.id, userId) : blockUser(viewer.id, userId);
+  const ok = action === "unblock" ? await unblockUser(viewer.id, userId) : await blockUser(viewer.id, userId);
   if (!ok) return fail("Amalni bajarib bo'lmadi", 400);
   return json({ data: { ok: true, action } });
 }

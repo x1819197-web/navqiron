@@ -14,7 +14,7 @@ export async function POST(req: Request) {
   const userId = typeof body.userId === "number" ? Math.floor(body.userId) : 0;
   if (!userId) return fail("Foydalanuvchi tanlanmadi", 422);
 
-  if (!removeFriend(viewer.id, userId)) return fail("Do'stlik topilmadi", 404);
+  if (!(await removeFriend(viewer.id, userId))) return fail("Do'stlik topilmadi", 404);
   return json({ data: { ok: true } });
 }
 

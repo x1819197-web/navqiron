@@ -13,14 +13,14 @@ Platforma ikki qismdan iborat:
 | --- | --- |
 | Framework | Next.js 16 (App Router) + React 19 + TypeScript |
 | Stil | Tailwind CSS v4 |
-| Baza | SQLite (`node:sqlite`, alohida native modul kerak emas) |
+| Baza | SQLite / libSQL (`@libsql/client`) — lokal fayl yoki bulutli Turso |
 | Xarita | 2GIS plitkalari (kalitsiz), zaxira Esri World Street Map → OpenStreetMap; Google Maps kaliti bo'lsa Google |
 | Auth | JWT (jose, HS256), httpOnly cookie + `Authorization: Bearer` |
 | Parol | `scrypt` (Node `crypto`) |
 
 ## Talablar
 
-- **Node.js 22+** (loyiha `node:sqlite` dan foydalanadi; Node 24 da tekshirilgan)
+- **Node.js 20+** (Node 24 da tekshirilgan)
 - npm
 
 ## Ishga tushirish
@@ -33,7 +33,7 @@ npm run dev
 
 Sayt: <http://localhost:3000> — admin: <http://localhost:3000/admin>
 
-Baza birinchi so'rovda `data/navqiron.db` faylida avtomatik yaratiladi va demo ma'lumotlar bilan to'ldiriladi: 6 tadbir + 6 joy kategoriyasi, 12 tadbir, 8 joy va tadbirlar bo'yicha ro'yxatdan o'tganlar (jami 1181 yozuv — admin ro'yxatlari bilan izchil).
+Baza birinchi so'rovda `data/navqiron.db` faylida avtomatik yaratiladi va demo ma'lumotlar bilan to'ldiriladi: 6 tadbir + 6 joy kategoriyasi, 12 tadbir, 8 joy va tadbirlar bo'yicha ro'yxatdan o'tganlar (jami 1181 yozuv — admin ro'yxatlari bilan izchil). `TURSO_DATABASE_URL` berilgan bo'lsa, o'sha mantiq bulutli bazaga bir marta qo'llanadi.
 
 ### Admin kirish
 
@@ -52,7 +52,9 @@ Parol:    navqiron2026
 | `NEXT_PUBLIC_GOOGLE_MAPS_API_KEY` | Yo'q | Google Maps kaliti. Bo'sh bo'lsa Leaflet + 2GIS (kalitsiz) ishlatiladi. |
 | `NEXT_PUBLIC_GOOGLE_MAPS_MAP_ID` | Yo'q | Google Cloud Map ID (custom styling). `DEMO_MAP_ID` o'rniga. |
 | `ADMIN_ORIGIN` | Yo'q | Tashqi admin panel domeni uchun CORS. Bo'sh bo'lsa `*`. |
-| `DATABASE_PATH` | Yo'q | SQLite fayl yo'li (default: `data/navqiron.db`). |
+| `TURSO_DATABASE_URL` | Yo'q | Turso/libSQL bazasi manzili (`libsql://...`). Bo'sh bo'lsa lokal fayl ishlatiladi. |
+| `TURSO_AUTH_TOKEN` | Yo'q | Turso bazasi uchun token (`TURSO_DATABASE_URL` bilan birga). |
+| `DATABASE_PATH` | Yo'q | Lokal SQLite fayl yo'li (default: `data/navqiron.db`). Bulutda ishlatilmaydi. |
 
 `NEXT_PUBLIC_*` qiymatlar **build vaqtida** joylanadi — Google kalitini qo'shgandan keyin serverni qayta ishga tushiring (production'da qayta build qiling).
 
@@ -165,7 +167,7 @@ src/
     explorer/                # xarita, filtrlar, ro'yxat, detal, registratsiya
     admin/                   # dashboard, CRUD formalar, modal
   lib/
-    db.ts                    # SQLite ulanishi + sxema
+    db.ts                    # libSQL (Turso yoki lokal fayl) ulanishi + sxema
     seed.ts                  # demo ma'lumotlar (kategoriya, tadbir, joy, ro'yxatlar)
     queries.ts               # CRUD va statistika
     validation.ts            # kiruvchi ma'lumot validatsiyasi
@@ -175,14 +177,15 @@ src/
     boundary.ts              # chegara GeoJSON
 public/data/                 # yunusobod-boundary(.min).geojson
 scripts/build-boundary.mjs   # OSM relation → GeoJSON
-data/navqiron.db             # SQLite (git'ga qo'shilmaydi)
+data/navqiron.db             # lokal SQLite (git'ga qo'shilmaydi)
 ```
 
 ## Ma'lumotlar bazasi
 
-- Fayl: `data/navqiron.db` (WAL rejimi). Birinchi ishga tushishda avtomatik yaratiladi.
-- Demo ma'lumotlarni qaytadan yaratish uchun: serverni to'xtatib, `data/navqiron.db*` fayllarini o'chiring va qayta ishga tushiring.
-- Zaxira nusxa: `data/navqiron.db` (+ `-wal`, `-shm`) fayllarini ko'chirib qo'yish kifoya.
+- Lokal rejim: `data/navqiron.db` fayli (SQLite, WAL). Birinchi ishga tushishda sxema va demo ma'lumotlar avtomatik yaratiladi.
+- Bulut rejimi: `TURSO_DATABASE_URL` + `TURSO_AUTH_TOKEN` berilsa, barcha so'rovlar Turso (libSQL) bazasiga ketadi. Sxema va seed birinchi so'rovda bir marta qo'llanadi.
+- Demo ma'lumotlarni qaytadan yaratish: lokalda `data/navqiron.db*` fayllarini o'chirib qayta ishga tushiring; bulutda Turso konsolidan bazani tozalang.
+- Zaxira nusxa: lokalda `data/navqiron.db` (+ `-wal`, `-shm`); bulutda Turso avtomatik zaxira (backup) imkoniyatidan foydalaning.
 
 ## Tuman chegarasini almashtirish
 
@@ -193,6 +196,16 @@ node scripts/build-boundary.mjs
 ```
 
 Skript `public/data/yunusobod-boundary.geojson` va minimallashtirilgan `.min.geojson` ni qayta yozadi.
+
+## Deploy (Vercel + Turso)
+
+1. **Turso** — [turso.tech](https://turso.tech) yoki Vercel Marketplace'da bepul baza yaratib, `TURSO_DATABASE_URL` va `TURSO_AUTH_TOKEN` ni oling.
+2. Repozitoriyni GitHub'ga push qiling.
+3. **Vercel** — [vercel.com/new](https://vercel.com/new) → repo'ni import qiling. Build `npm run build`, start avtomatik.
+4. Environment Variables: `TURSO_DATABASE_URL`, `TURSO_AUTH_TOKEN`, `AUTH_SECRET` (uzun tasodifiy qiymat).
+5. Deploy. Birinchi ochilishda sxema va demo ma'lumotlar Turso'ga avtomatik yoziladi.
+
+Serverless muhitda lokal fayl saqlanmaydi — bulutda `TURSO_*` o'zgaruvchilari majburiy.
 
 ## Skriptlar
 
@@ -206,6 +219,6 @@ npm run typecheck  # TypeScript tekshiruvi
 ## Production eslatmalari
 
 - `AUTH_SECRET` ni majburiy o'zgartiring; admin parolini almashtiring.
-- `data/` kataloğini doimiy diskda saqlang (konteynerda volume).
+- Vercel kabi serverless muhitda `TURSO_DATABASE_URL`/`TURSO_AUTH_TOKEN` ni qo'ying; o'z serveringizda `data/` katalogini doimiy diskda (volume) saqlang.
 - Reverse proxy orqasida ishlatsangiz, HTTPS va `ADMIN_ORIGIN` ni sozlang.
 - Google Maps kalitini HTTP referrer bo'yicha cheklang.

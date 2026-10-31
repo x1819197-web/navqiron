@@ -25,7 +25,7 @@ export async function POST(req: NextRequest) {
   if (!password) errors.password = "Parolni kiriting";
   if (Object.keys(errors).length) return fail("Ma'lumotlarni to'ldiring", 422, errors);
 
-  const user = authenticateUser(phone!, password);
+  const user = await authenticateUser(phone!, password);
   if (!user) return fail("Telefon raqam yoki parol noto'g'ri", 401);
 
   const token = await createUserToken(user);

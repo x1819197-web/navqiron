@@ -12,8 +12,8 @@ export async function POST(
   const { id } = await params;
   const numeric = Number(id);
   const event = Number.isInteger(numeric)
-    ? getEventById(numeric)
-    : getEventBySlug(id);
+    ? await getEventById(numeric)
+    : await getEventBySlug(id);
   if (!event) return fail("Tadbir topilmadi", 404);
 
   const body = await readJson(req);
@@ -28,7 +28,7 @@ export async function POST(
   if (!phone) errors.phone = "Telefon raqam noto'g'ri (masalan: 90 123 45 67)";
   if (Object.keys(errors).length) return fail("Ma'lumotlarni tekshiring", 422, errors);
 
-  const result = registerForEvent(event.id, name, phone!);
+  const result = await registerForEvent(event.id, name, phone!);
   if (!result.ok) {
     return fail(result.message, result.code === "not_found" ? 404 : 409);
   }

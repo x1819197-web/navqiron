@@ -8,7 +8,7 @@ export const dynamic = "force-dynamic";
 export async function GET() {
   const viewer = await getUserSession();
   if (!viewer) return fail("Avval tizimga kiring", 401);
-  return json({ data: listFreeFriends(viewer.id) });
+  return json({ data: await listFreeFriends(viewer.id) });
 }
 
 export function OPTIONS() {

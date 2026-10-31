@@ -14,7 +14,7 @@ import { parseEventInput } from "@/lib/validation";
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
-function resolve(idOrSlug: string) {
+async function resolve(idOrSlug: string) {
   const numeric = Number(idOrSlug);
   return Number.isInteger(numeric) && numeric > 0
     ? getEventById(numeric)
@@ -26,7 +26,7 @@ export async function GET(
   { params }: { params: Promise<{ id: string }> },
 ) {
   const { id } = await params;
-  const event = resolve(id);
+  const event = await resolve(id);
   if (!event) return fail("Tadbir topilmadi", 404);
   if (event.status !== "published") {
     const admin = await getAdminFromRequest(req);
@@ -43,7 +43,7 @@ export async function PATCH(
   if (!admin) return fail("Avtorizatsiya talab qilinadi", 401);
 
   const { id } = await params;
-  const existing = resolve(id);
+  const existing = await resolve(id);
   if (!existing) return fail("Tadbir topilmadi", 404);
 
   const body = await readJson(req);
@@ -52,17 +52,17 @@ export async function PATCH(
   const { data, errors } = parseEventInput(body, existing);
   if (Object.keys(errors).length) return fail("Ma'lumotlar to'liq emas", 422, errors);
 
-  const category = findCategory(data.categoryId);
+  const category = await findCategory(data.categoryId);
   if (!category || category.kind !== "event") {
     return fail("Tadbir kategoriyasi noto'g'ri", 422, { categoryId: "Kategoriya topilmadi" });
   }
 
   data.slug =
     typeof body.slug === "string" && body.slug.trim()
-      ? uniqueSlug("events", body.slug, existing.id)
+      ? await uniqueSlug("events", body.slug, existing.id)
       : existing.slug;
 
-  const event = updateEvent(existing.id, data);
+  const event = await updateEvent(existing.id, data);
   return json({ data: event });
 }
 
@@ -74,10 +74,10 @@ export async function DELETE(
   if (!admin) return fail("Avtorizatsiya talab qilinadi", 401);
 
   const { id } = await params;
-  const existing = resolve(id);
+  const existing = await resolve(id);
   if (!existing) return fail("Tadbir topilmadi", 404);
 
-  deleteEvent(existing.id);
+  await deleteEvent(existing.id);
   return json({ ok: true });
 }
 

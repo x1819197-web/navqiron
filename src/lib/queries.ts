@@ -1,4 +1,4 @@
-import { getDb } from "./db";
+import { getDb, type QueryRow } from "./db";
 import type {
   AdminUser,
   Category,
@@ -10,7 +10,7 @@ import type {
   Status,
 } from "./types";
 
-type Row = Record<string, unknown>;
+type Row = QueryRow;
 
 const EVENT_SELECT = `
   SELECT e.*,
@@ -92,11 +92,11 @@ function mapPlace(row: Row): PlaceItem {
   };
 }
 
-export function listCategories(kind?: CategoryKind): Category[] {
-  const db = getDb();
+export async function listCategories(kind?: CategoryKind): Promise<Category[]> {
+  const db = await getDb();
   const rows = kind
-    ? (db.prepare("SELECT * FROM categories WHERE kind = ? ORDER BY sort, id").all(kind) as Row[])
-    : (db.prepare("SELECT * FROM categories ORDER BY kind, sort, id").all() as Row[]);
+    ? await db.all("SELECT * FROM categories WHERE kind = ? ORDER BY sort, id", kind)
+    : await db.all("SELECT * FROM categories ORDER BY kind, sort, id");
   return rows.map((row) => ({
     id: num(row.id),
     slug: str(row.slug),
@@ -107,8 +107,9 @@ export function listCategories(kind?: CategoryKind): Category[] {
   }));
 }
 
-export function findCategory(id: number): Category | null {
-  const row = getDb().prepare("SELECT * FROM categories WHERE id = ?").get(id) as Row | undefined;
+export async function findCategory(id: number): Promise<Category | null> {
+  const db = await getDb();
+  const row = await db.get("SELECT * FROM categories WHERE id = ?", id);
   if (!row) return null;
   return {
     id: num(row.id),
@@ -128,7 +129,8 @@ export interface EventFilter {
   limit?: number;
 }
 
-export function listEvents(filter: EventFilter = {}): EventItem[] {
+export async function listEvents(filter: EventFilter = {}): Promise<EventItem[]> {
+  const db = await getDb();
   const clauses: string[] = [];
   const params: (string | number)[] = [];
   if (filter.status && filter.status !== "all") {
@@ -151,17 +153,19 @@ export function listEvents(filter: EventFilter = {}): EventItem[] {
   const where = clauses.length ? `WHERE ${clauses.join(" AND ")}` : "";
   const limit = filter.limit ? `LIMIT ${Math.max(1, Math.floor(filter.limit))}` : "";
   const sql = `${EVENT_SELECT} ${where} ORDER BY e.starts_at ASC ${limit}`;
-  const rows = getDb().prepare(sql).all(...params) as Row[];
+  const rows = await db.all(sql, ...params);
   return rows.map(mapEvent);
 }
 
-export function getEventById(id: number): EventItem | null {
-  const row = getDb().prepare(`${EVENT_SELECT} WHERE e.id = ?`).get(id) as Row | undefined;
+export async function getEventById(id: number): Promise<EventItem | null> {
+  const db = await getDb();
+  const row = await db.get(`${EVENT_SELECT} WHERE e.id = ?`, id);
   return row ? mapEvent(row) : null;
 }
 
-export function getEventBySlug(slug: string): EventItem | null {
-  const row = getDb().prepare(`${EVENT_SELECT} WHERE e.slug = ?`).get(slug) as Row | undefined;
+export async function getEventBySlug(slug: string): Promise<EventItem | null> {
+  const db = await getDb();
+  const row = await db.get(`${EVENT_SELECT} WHERE e.slug = ?`, slug);
   return row ? mapEvent(row) : null;
 }
 
@@ -184,48 +188,44 @@ export interface EventWrite {
   status: Status;
 }
 
-export function createEvent(data: EventWrite): EventItem {
-  const db = getDb();
+export async function createEvent(data: EventWrite): Promise<EventItem> {
+  const db = await getDb();
   const now = new Date().toISOString();
-  const result = db
-    .prepare(
-      `INSERT INTO events
-        (slug, title, description, category_id, lat, lng, venue, address, starts_at, ends_at,
-         organizer, is_free, price, capacity, registered, status, created_at, updated_at)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-    )
-    .run(
-      data.slug,
-      data.title,
-      data.description,
-      data.categoryId,
-      data.lat,
-      data.lng,
-      data.venue,
-      data.address,
-      data.startsAt,
-      data.endsAt,
-      data.organizer,
-      data.isFree ? 1 : 0,
-      data.price,
-      data.capacity,
-      data.registered,
-      data.status,
-      now,
-      now,
-    );
-  return getEventById(Number(result.lastInsertRowid))!;
+  const result = await db.run(
+    `INSERT INTO events
+      (slug, title, description, category_id, lat, lng, venue, address, starts_at, ends_at,
+       organizer, is_free, price, capacity, registered, status, created_at, updated_at)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+    data.slug,
+    data.title,
+    data.description,
+    data.categoryId,
+    data.lat,
+    data.lng,
+    data.venue,
+    data.address,
+    data.startsAt,
+    data.endsAt,
+    data.organizer,
+    data.isFree ? 1 : 0,
+    data.price,
+    data.capacity,
+    data.registered,
+    data.status,
+    now,
+    now,
+  );
+  return (await getEventById(Number(result.lastInsertRowid)))!;
 }
 
-export function updateEvent(id: number, data: EventWrite): EventItem | null {
-  const db = getDb();
-  db.prepare(
+export async function updateEvent(id: number, data: EventWrite): Promise<EventItem | null> {
+  const db = await getDb();
+  await db.run(
     `UPDATE events SET
       slug = ?, title = ?, description = ?, category_id = ?, lat = ?, lng = ?, venue = ?,
       address = ?, starts_at = ?, ends_at = ?, organizer = ?, is_free = ?, price = ?,
       capacity = ?, registered = ?, status = ?, updated_at = ?
      WHERE id = ?`,
-  ).run(
     data.slug,
     data.title,
     data.description,
@@ -248,9 +248,10 @@ export function updateEvent(id: number, data: EventWrite): EventItem | null {
   return getEventById(id);
 }
 
-export function deleteEvent(id: number): boolean {
-  const result = getDb().prepare("DELETE FROM events WHERE id = ?").run(id);
-  return Number(result.changes) > 0;
+export async function deleteEvent(id: number): Promise<boolean> {
+  const db = await getDb();
+  const result = await db.run("DELETE FROM events WHERE id = ?", id);
+  return result.changes > 0;
 }
 
 export interface PlaceFilter {
@@ -259,7 +260,8 @@ export interface PlaceFilter {
   query?: string;
 }
 
-export function listPlaces(filter: PlaceFilter = {}): PlaceItem[] {
+export async function listPlaces(filter: PlaceFilter = {}): Promise<PlaceItem[]> {
+  const db = await getDb();
   const clauses: string[] = [];
   const params: (string | number)[] = [];
   if (filter.status && filter.status !== "all") {
@@ -276,19 +278,19 @@ export function listPlaces(filter: PlaceFilter = {}): PlaceItem[] {
     params.push(like, like, like);
   }
   const where = clauses.length ? `WHERE ${clauses.join(" AND ")}` : "";
-  const rows = getDb()
-    .prepare(`${PLACE_SELECT} ${where} ORDER BY c.sort, p.name ASC`)
-    .all(...params) as Row[];
+  const rows = await db.all(`${PLACE_SELECT} ${where} ORDER BY c.sort, p.name ASC`, ...params);
   return rows.map(mapPlace);
 }
 
-export function getPlaceById(id: number): PlaceItem | null {
-  const row = getDb().prepare(`${PLACE_SELECT} WHERE p.id = ?`).get(id) as Row | undefined;
+export async function getPlaceById(id: number): Promise<PlaceItem | null> {
+  const db = await getDb();
+  const row = await db.get(`${PLACE_SELECT} WHERE p.id = ?`, id);
   return row ? mapPlace(row) : null;
 }
 
-export function getPlaceBySlug(slug: string): PlaceItem | null {
-  const row = getDb().prepare(`${PLACE_SELECT} WHERE p.slug = ?`).get(slug) as Row | undefined;
+export async function getPlaceBySlug(slug: string): Promise<PlaceItem | null> {
+  const db = await getDb();
+  const row = await db.get(`${PLACE_SELECT} WHERE p.slug = ?`, slug);
   return row ? mapPlace(row) : null;
 }
 
@@ -306,84 +308,79 @@ export interface PlaceWrite {
   status: Status;
 }
 
-export function createPlace(data: PlaceWrite): PlaceItem {
-  const db = getDb();
+export async function createPlace(data: PlaceWrite): Promise<PlaceItem> {
+  const db = await getDb();
   const now = new Date().toISOString();
-  const result = db
-    .prepare(
-      `INSERT INTO places
-        (slug, name, description, category_id, lat, lng, address, working_hours, phone, url,
-         status, created_at, updated_at)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-    )
-    .run(
-      data.slug,
-      data.name,
-      data.description,
-      data.categoryId,
-      data.lat,
-      data.lng,
-      data.address,
-      data.workingHours,
-      data.phone,
-      data.url,
-      data.status,
-      now,
-      now,
-    );
-  return getPlaceById(Number(result.lastInsertRowid))!;
+  const result = await db.run(
+    `INSERT INTO places
+      (slug, name, description, category_id, lat, lng, address, working_hours, phone, url,
+       status, created_at, updated_at)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+    data.slug,
+    data.name,
+    data.description,
+    data.categoryId,
+    data.lat,
+    data.lng,
+    data.address,
+    data.workingHours,
+    data.phone,
+    data.url,
+    data.status,
+    now,
+    now,
+  );
+  return (await getPlaceById(Number(result.lastInsertRowid)))!;
 }
 
-export function updatePlace(id: number, data: PlaceWrite): PlaceItem | null {
-  getDb()
-    .prepare(
-      `UPDATE places SET
-        slug = ?, name = ?, description = ?, category_id = ?, lat = ?, lng = ?, address = ?,
-        working_hours = ?, phone = ?, url = ?, status = ?, updated_at = ?
-       WHERE id = ?`,
-    )
-    .run(
-      data.slug,
-      data.name,
-      data.description,
-      data.categoryId,
-      data.lat,
-      data.lng,
-      data.address,
-      data.workingHours,
-      data.phone,
-      data.url,
-      data.status,
-      new Date().toISOString(),
-      id,
-    );
+export async function updatePlace(id: number, data: PlaceWrite): Promise<PlaceItem | null> {
+  const db = await getDb();
+  await db.run(
+    `UPDATE places SET
+      slug = ?, name = ?, description = ?, category_id = ?, lat = ?, lng = ?, address = ?,
+      working_hours = ?, phone = ?, url = ?, status = ?, updated_at = ?
+     WHERE id = ?`,
+    data.slug,
+    data.name,
+    data.description,
+    data.categoryId,
+    data.lat,
+    data.lng,
+    data.address,
+    data.workingHours,
+    data.phone,
+    data.url,
+    data.status,
+    new Date().toISOString(),
+    id,
+  );
   return getPlaceById(id);
 }
 
-export function deletePlace(id: number): boolean {
-  const result = getDb().prepare("DELETE FROM places WHERE id = ?").run(id);
-  return Number(result.changes) > 0;
+export async function deletePlace(id: number): Promise<boolean> {
+  const db = await getDb();
+  const result = await db.run("DELETE FROM places WHERE id = ?", id);
+  return result.changes > 0;
 }
 
-export function getStats(): Stats {
-  const db = getDb();
+export async function getStats(): Promise<Stats> {
+  const db = await getDb();
   const now = new Date().toISOString();
-  const events = db
-    .prepare(
-      `SELECT COUNT(*) AS c,
-              COALESCE(SUM(registered), 0) AS r,
-              COALESCE(SUM(CASE WHEN is_free = 1 THEN 1 ELSE 0 END), 0) AS f
-       FROM events WHERE status = 'published' AND starts_at >= ?`,
-    )
-    .get(now) as Row;
-  const places = db
-    .prepare("SELECT COUNT(*) AS c FROM places WHERE status = 'published'")
-    .get() as Row;
+  const events = await db.get(
+    `SELECT COUNT(*) AS c,
+            COALESCE(SUM(registered), 0) AS r,
+            COALESCE(SUM(CASE WHEN is_free = 1 THEN 1 ELSE 0 END), 0) AS f
+     FROM events WHERE status = 'published' AND starts_at >= ?`,
+    now,
+  );
+  const places = await db.get(
+    "SELECT COUNT(*) AS c FROM places WHERE status = 'published'",
+  );
   return {
-    upcomingEvents: num(events.c),
-    registered: num(events.r),
-    freeEvents: num(events.f),
-    places: num(places.c),
+    upcomingEvents: num(events?.c),
+    registered: num(events?.r),
+    freeEvents: num(events?.f),
+    places: num(places?.c),
   };
 }
 
@@ -391,15 +388,16 @@ export type RegisterResult =
   | { ok: true; registered: number; capacity: number | null }
   | { ok: false; code: "not_found" | "full" | "duplicate"; message: string };
 
-export function registerForEvent(
+export async function registerForEvent(
   eventId: number,
   name: string,
   phone: string,
-): RegisterResult {
-  const db = getDb();
-  const event = db
-    .prepare("SELECT id, capacity, registered, status FROM events WHERE id = ?")
-    .get(eventId) as Row | undefined;
+): Promise<RegisterResult> {
+  const db = await getDb();
+  const event = await db.get(
+    "SELECT id, capacity, registered, status FROM events WHERE id = ?",
+    eventId,
+  );
   if (!event || event.status !== "published") {
     return { ok: false, code: "not_found", message: "Tadbir topilmadi yoki faol emas" };
   }
@@ -407,34 +405,36 @@ export function registerForEvent(
   if (capacity != null && num(event.registered) >= capacity) {
     return { ok: false, code: "full", message: "Afsus, joylar allaqachon tugagan" };
   }
-  try {
-    db.prepare(
-      "INSERT INTO registrations (event_id, name, phone, created_at) VALUES (?, ?, ?, ?)",
-    ).run(eventId, name, phone, new Date().toISOString());
-  } catch (error) {
-    if (String(error).toUpperCase().includes("UNIQUE")) {
-      return {
-        ok: false,
-        code: "duplicate",
-        message: "Bu telefon raqam bilan allaqachon ro'yxatdan o'tgansiz",
-      };
-    }
-    throw error;
-  }
-  db.prepare("UPDATE events SET registered = registered + 1, updated_at = ? WHERE id = ?").run(
-    new Date().toISOString(),
+  const existing = await db.get(
+    "SELECT id FROM registrations WHERE event_id = ? AND phone = ?",
     eventId,
+    phone,
   );
-  const updated = db.prepare("SELECT registered FROM events WHERE id = ?").get(eventId) as Row;
-  return { ok: true, registered: num(updated.registered), capacity: capacity ?? null };
+  if (existing) {
+    return {
+      ok: false,
+      code: "duplicate",
+      message: "Bu telefon raqam bilan allaqachon ro'yxatdan o'tgansiz",
+    };
+  }
+  await db.run(
+    "INSERT INTO registrations (event_id, name, phone, created_at) VALUES (?, ?, ?, ?)",
+    eventId,
+    name,
+    phone,
+    new Date().toISOString(),
+  );
+  await db.run("UPDATE events SET registered = registered + 1, updated_at = ? WHERE id = ?", new Date().toISOString(), eventId);
+  const updated = await db.get("SELECT registered FROM events WHERE id = ?", eventId);
+  return { ok: true, registered: num(updated?.registered), capacity: capacity ?? null };
 }
 
-export function listRegistrations(eventId: number): Registration[] {
-  const rows = getDb()
-    .prepare(
-      "SELECT id, event_id, name, phone, created_at FROM registrations WHERE event_id = ? ORDER BY created_at DESC",
-    )
-    .all(eventId) as Row[];
+export async function listRegistrations(eventId: number): Promise<Registration[]> {
+  const db = await getDb();
+  const rows = await db.all(
+    "SELECT id, event_id, name, phone, created_at FROM registrations WHERE event_id = ? ORDER BY created_at DESC",
+    eventId,
+  );
   return rows.map((row) => ({
     id: num(row.id),
     eventId: num(row.event_id),
@@ -448,10 +448,12 @@ export interface AdminRecord extends AdminUser {
   passwordHash: string;
 }
 
-export function findAdminByEmail(email: string): AdminRecord | null {
-  const row = getDb()
-    .prepare("SELECT id, email, password_hash, name FROM admins WHERE email = ?")
-    .get(email.toLowerCase()) as Row | undefined;
+export async function findAdminByEmail(email: string): Promise<AdminRecord | null> {
+  const db = await getDb();
+  const row = await db.get(
+    "SELECT id, email, password_hash, name FROM admins WHERE email = ?",
+    email.toLowerCase(),
+  );
   if (!row) return null;
   return {
     id: num(row.id),
@@ -461,10 +463,9 @@ export function findAdminByEmail(email: string): AdminRecord | null {
   };
 }
 
-export function getAdminById(id: number): AdminUser | null {
-  const row = getDb()
-    .prepare("SELECT id, email, name FROM admins WHERE id = ?")
-    .get(id) as Row | undefined;
+export async function getAdminById(id: number): Promise<AdminUser | null> {
+  const db = await getDb();
+  const row = await db.get("SELECT id, email, name FROM admins WHERE id = ?", id);
   if (!row) return null;
   return { id: num(row.id), email: str(row.email), name: str(row.name) };
 }
@@ -489,17 +490,22 @@ export function slugify(value: string): string {
   return base || "yozuv";
 }
 
-export function uniqueSlug(table: "events" | "places", base: string, excludeId?: number): string {
-  const db = getDb();
+export async function uniqueSlug(
+  table: "events" | "places",
+  base: string,
+  excludeId?: number,
+): Promise<string> {
+  const db = await getDb();
   const root = slugify(base);
-  const check = excludeId
-    ? db.prepare(`SELECT id FROM ${table} WHERE slug = ? AND id != ?`)
-    : db.prepare(`SELECT id FROM ${table} WHERE slug = ?`);
-  const exists = (slug: string) =>
-    excludeId ? check.get(slug, excludeId) : check.get(slug);
+  const exists = async (slug: string) => {
+    const row = excludeId
+      ? await db.get(`SELECT id FROM ${table} WHERE slug = ? AND id != ?`, slug, excludeId)
+      : await db.get(`SELECT id FROM ${table} WHERE slug = ?`, slug);
+    return Boolean(row);
+  };
   let candidate = root;
   let suffix = 2;
-  while (exists(candidate)) {
+  while (await exists(candidate)) {
     candidate = `${root}-${suffix++}`;
     if (suffix > 500) {
       candidate = `${root}-${Date.now()}`;

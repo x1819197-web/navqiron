@@ -8,7 +8,7 @@ export const dynamic = "force-dynamic";
 export async function GET() {
   const viewer = await getUserSession();
   if (!viewer) return fail("Avval tizimga kiring", 401);
-  return json({ data: listNotifications(viewer.id) });
+  return json({ data: await listNotifications(viewer.id) });
 }
 
 export async function POST(req: Request) {
@@ -16,7 +16,7 @@ export async function POST(req: Request) {
   if (!viewer) return fail("Avval tizimga kiring", 401);
   const body = (await readJson(req)) ?? {};
   const id = typeof body.id === "number" ? Math.floor(body.id) : undefined;
-  markNotificationsRead(viewer.id, id);
+  await markNotificationsRead(viewer.id, id);
   return json({ data: { ok: true } });
 }
 

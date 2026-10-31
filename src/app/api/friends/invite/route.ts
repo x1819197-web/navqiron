@@ -20,7 +20,7 @@ export async function POST(req: NextRequest) {
   const eventId = typeof body.eventId === "number" ? Math.floor(body.eventId) : 0;
   if (!friendId || !eventId) return fail("Do'st va tadbirni tanlang", 422);
 
-  const result = inviteFriendToEvent(viewer.id, friendId, eventId);
+  const result = await inviteFriendToEvent(viewer.id, friendId, eventId);
   if (!result.ok) return fail(result.message, 400);
   return json({ data: { ok: true } });
 }

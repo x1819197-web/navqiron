@@ -27,7 +27,7 @@ export async function POST(req: NextRequest) {
   if (password.length < 6) errors.password = "Parol kamida 6 ta belgidan bo'lishi kerak";
   if (Object.keys(errors).length) return fail("Ma'lumotlarni tekshiring", 422, errors);
 
-  const result = createUser(name, phone!, password);
+  const result = await createUser(name, phone!, password);
   if (!result.ok) {
     return fail(result.message, 409, { phone: "Bu raqam allaqachon band" });
   }

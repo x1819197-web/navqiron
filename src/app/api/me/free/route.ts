@@ -8,7 +8,7 @@ export const dynamic = "force-dynamic";
 export async function GET() {
   const viewer = await getUserSession();
   if (!viewer) return fail("Avval tizimga kiring", 401);
-  return json({ data: { freeStatus: getFreeStatus(viewer.id) } });
+  return json({ data: { freeStatus: await getFreeStatus(viewer.id) } });
 }
 
 export async function PUT(req: Request) {
@@ -26,14 +26,14 @@ export async function PUT(req: Request) {
   const lat = typeof body.lat === "number" && Number.isFinite(body.lat) ? body.lat : null;
   const lng = typeof body.lng === "number" && Number.isFinite(body.lng) ? body.lng : null;
 
-  const freeStatus = setFreeStatus(viewer.id, hours, note, lat, lng);
+  const freeStatus = await setFreeStatus(viewer.id, hours, note, lat, lng);
   return json({ data: { freeStatus } });
 }
 
 export async function DELETE() {
   const viewer = await getUserSession();
   if (!viewer) return fail("Avval tizimga kiring", 401);
-  clearFreeStatus(viewer.id);
+  await clearFreeStatus(viewer.id);
   return json({ data: { freeStatus: null } });
 }
 

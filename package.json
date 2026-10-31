@@ -9,6 +9,7 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
+    "@libsql/client": "^0.18.0",
     "jose": "^6.2.14",
     "leaflet": "^1.9.4",
     "lucide-react": "^1.65.0",

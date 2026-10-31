@@ -16,7 +16,7 @@ export async function GET(
   if (!Number.isInteger(targetId) || targetId <= 0) {
     return fail("Foydalanuvchi topilmadi", 404);
   }
-  const user = getPublicUser(viewer.id, targetId);
+  const user = await getPublicUser(viewer.id, targetId);
   if (!user) return fail("Foydalanuvchi topilmadi", 404);
   return json({ data: user });
 }

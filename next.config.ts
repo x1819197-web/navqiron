@@ -4,6 +4,7 @@ const nextConfig: NextConfig = {
   images: { unoptimized: true },
   poweredByHeader: false,
   devIndicators: false,
+  serverExternalPackages: ["@libsql/client"],
 };
 
 export default nextConfig;

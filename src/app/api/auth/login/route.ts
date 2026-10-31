@@ -36,7 +36,7 @@ export async function POST(req: NextRequest) {
   if (!password) errors.password = "Parolni kiriting";
   if (Object.keys(errors).length) return fail("Ma'lumotlarni to'ldiring", 422, errors);
 
-  const admin = findAdminByEmail(email);
+  const admin = await findAdminByEmail(email);
   if (!admin || !verifyPassword(password, admin.passwordHash)) {
     return fail("Email yoki parol noto'g'ri", 401);
   }

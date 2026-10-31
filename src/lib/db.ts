@@ -1,6 +1,6 @@
 import fs from "node:fs";
 import path from "node:path";
-import { DatabaseSync } from "node:sqlite";
+import { createClient, type Client, type InValue } from "@libsql/client";
 import { seedDatabase } from "./seed";
 
 const SCHEMA = `
@@ -107,39 +107,77 @@ CREATE INDEX IF NOT EXISTS idx_friendships_pair ON friendships(requester_id, add
 CREATE INDEX IF NOT EXISTS idx_notifications_user ON notifications(user_id, created_at);
 `;
 
-function ensureColumn(
-  database: DatabaseSync,
-  table: string,
-  column: string,
-  definition: string,
-): void {
-  const columns = database.prepare(`PRAGMA table_info(${table})`).all() as {
-    name?: unknown;
-  }[];
-  if (columns.some((item) => String(item.name) === column)) return;
-  database.exec(`ALTER TABLE ${table} ADD COLUMN ${column} ${definition}`);
+export type QueryRow = Record<string, unknown>;
+export type RunResult = { changes: number; lastInsertRowid: number };
+
+export interface Database {
+  get(sql: string, ...args: InValue[]): Promise<QueryRow | undefined>;
+  all(sql: string, ...args: InValue[]): Promise<QueryRow[]>;
+  run(sql: string, ...args: InValue[]): Promise<RunResult>;
+  exec(sql: string): Promise<void>;
+  batch(statements: string[]): Promise<void>;
 }
 
-function createDatabase(): DatabaseSync {
+function createClientInstance(): Client {
+  const url = process.env.TURSO_DATABASE_URL;
+  if (url) {
+    return createClient({ url, authToken: process.env.TURSO_AUTH_TOKEN });
+  }
   const file = process.env.DATABASE_PATH || path.join(process.cwd(), "data", "navqiron.db");
   fs.mkdirSync(path.dirname(file), { recursive: true });
-  const database = new DatabaseSync(file);
-  database.exec("PRAGMA journal_mode = WAL;");
-  database.exec("PRAGMA foreign_keys = ON;");
-  database.exec(SCHEMA);
-  ensureColumn(database, "users", "free_until", "TEXT");
-  ensureColumn(database, "users", "free_note", "TEXT");
-  ensureColumn(database, "users", "free_lat", "REAL");
-  ensureColumn(database, "users", "free_lng", "REAL");
-  seedDatabase(database);
+  return createClient({ url: `file:${file.replace(/\\/g, "/")}` });
+}
+
+async function ensureColumn(client: Client, table: string, column: string, definition: string) {
+  const result = await client.execute(`PRAGMA table_info(${table})`);
+  if (result.rows.some((row) => String(row.name) === column)) return;
+  await client.execute(`ALTER TABLE ${table} ADD COLUMN ${column} ${definition}`);
+}
+
+function wrap(client: Client): Database {
+  return {
+    async get(sql, ...args) {
+      const result = await client.execute({ sql, args });
+      return result.rows[0] as QueryRow | undefined;
+    },
+    async all(sql, ...args) {
+      const result = await client.execute({ sql, args });
+      return result.rows.map((row) => ({ ...row })) as QueryRow[];
+    },
+    async run(sql, ...args) {
+      const result = await client.execute({ sql, args });
+      return {
+        changes: Number(result.rowsAffected ?? 0),
+        lastInsertRowid: Number(result.lastInsertRowid ?? 0),
+      };
+    },
+    async exec(sql) {
+      await client.executeMultiple(sql);
+    },
+    async batch(statements) {
+      if (!statements.length) return;
+      await client.batch(statements, "write");
+    },
+  };
+}
+
+async function prepareDatabase(): Promise<Database> {
+  const client = createClientInstance();
+  await client.executeMultiple(SCHEMA);
+  await ensureColumn(client, "users", "free_until", "TEXT");
+  await ensureColumn(client, "users", "free_note", "TEXT");
+  await ensureColumn(client, "users", "free_lat", "REAL");
+  await ensureColumn(client, "users", "free_lng", "REAL");
+  const database = wrap(client);
+  await seedDatabase(database);
   return database;
 }
 
-const globalForDb = globalThis as unknown as { __navqironDb?: DatabaseSync };
+const globalForDb = globalThis as unknown as { __navqironDb?: Promise<Database> };
 
-export function getDb(): DatabaseSync {
+export function getDb(): Promise<Database> {
   if (!globalForDb.__navqironDb) {
-    globalForDb.__navqironDb = createDatabase();
+    globalForDb.__navqironDb = prepareDatabase();
   }
   return globalForDb.__navqironDb;
 }
