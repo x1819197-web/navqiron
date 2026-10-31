@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { loadGoogleMaps } from "@/lib/google-maps";
-import { markerHtml } from "@/lib/marker";
+import { markerHtml, friendMarkerHtml } from "@/lib/marker";
 import { transitPopupHtml, transitStopHtml } from "@/lib/transit-view";
 import type { MapComponentProps } from "./map-types";
 
@@ -16,9 +16,11 @@ export default function GoogleMap({
   mapId,
   points,
   stops,
+  friends,
   selectedKey,
   boundary,
   onSelect,
+  onSelectFriend,
   onMapClick,
   onReady,
   onError,
@@ -27,6 +29,7 @@ export default function GoogleMap({
   const mapRef = useRef<google.maps.Map | null>(null);
   const googleRef = useRef<typeof google | null>(null);
   const markersRef = useRef<google.maps.marker.AdvancedMarkerElement[]>([]);
+  const friendsRef = useRef<google.maps.marker.AdvancedMarkerElement[]>([]);
   const transitRef = useRef<{
     markers: google.maps.marker.AdvancedMarkerElement[];
     info: google.maps.InfoWindow | null;
@@ -35,8 +38,8 @@ export default function GoogleMap({
   const lastMarkerClick = useRef(0);
   const [ready, setReady] = useState(false);
 
-  const callbacks = useRef({ onSelect, onMapClick, onReady, onError });
-  callbacks.current = { onSelect, onMapClick, onReady, onError };
+  const callbacks = useRef({ onSelect, onSelectFriend, onMapClick, onReady, onError });
+  callbacks.current = { onSelect, onSelectFriend, onMapClick, onReady, onError };
 
   useEffect(() => {
     let cancelled = false;
@@ -81,25 +84,17 @@ export default function GoogleMap({
           new g.maps.Polygon({
             paths: [world, path],
             strokeOpacity: 0,
-            fillColor: "#0c352a",
-            fillOpacity: 0.12,
+            fillColor: "#07040f",
+            fillOpacity: 0.45,
             clickable: false,
           }).setMap(map);
           new g.maps.Polygon({
             paths: path,
-            strokeColor: "#fffdf7",
-            strokeOpacity: 0.7,
-            strokeWeight: 6,
-            fillColor: "#d8f47b",
+            strokeColor: "#a78bfa",
+            strokeOpacity: 0.9,
+            strokeWeight: 2.5,
+            fillColor: "#7c3aed",
             fillOpacity: 0.14,
-            clickable: false,
-          }).setMap(map);
-          new g.maps.Polygon({
-            paths: path,
-            strokeColor: "#0c352a",
-            strokeOpacity: 0.55,
-            strokeWeight: 1.8,
-            fillOpacity: 0,
             clickable: false,
           }).setMap(map);
           bounds = new g.maps.LatLngBounds();
@@ -161,6 +156,10 @@ export default function GoogleMap({
         marker.map = null;
       });
       markersRef.current = [];
+      friendsRef.current.forEach((marker) => {
+        marker.map = null;
+      });
+      friendsRef.current = [];
       const map = mapRef.current;
       if (map && window.google?.maps?.event) {
         window.google.maps.event.clearInstanceListeners(map);
@@ -273,6 +272,43 @@ export default function GoogleMap({
       transit.markers = [];
     };
   }, [stops, ready]);
+
+  useEffect(() => {
+    const g = googleRef.current;
+    const map = mapRef.current;
+    if (!ready || !g || !map) return;
+
+    friendsRef.current.forEach((marker) => {
+      marker.map = null;
+    });
+    friendsRef.current = [];
+
+    for (const friend of friends) {
+      const content = document.createElement("div");
+      content.className = "gm-friend";
+      content.innerHTML = friendMarkerHtml(friend);
+      content.addEventListener("click", (event) => {
+        event.stopPropagation();
+        lastMarkerClick.current = Date.now();
+        callbacks.current.onSelectFriend(friend.id);
+      });
+      const marker = new g.maps.marker.AdvancedMarkerElement({
+        map,
+        position: { lat: friend.lat, lng: friend.lng },
+        content,
+        title: friend.name,
+        zIndex: 300,
+      });
+      friendsRef.current.push(marker);
+    }
+
+    return () => {
+      friendsRef.current.forEach((marker) => {
+        marker.map = null;
+      });
+      friendsRef.current = [];
+    };
+  }, [friends, ready]);
 
   return (
     <div

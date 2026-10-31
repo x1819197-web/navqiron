@@ -1,16 +1,24 @@
-import { Explorer } from "@/components/explorer/Explorer";
+import { AppExperience } from "@/components/app/AppExperience";
 import { loadBoundary } from "@/lib/boundary";
+import { friendGoingCounts } from "@/lib/friends";
 import { listCategories, listEvents, listPlaces } from "@/lib/queries";
+import { getUserSession } from "@/lib/user-auth";
 
 export const dynamic = "force-dynamic";
 
-export default function HomePage() {
-  const events = listEvents({ status: "published" });
+export default async function HomePage() {
+  const user = await getUserSession();
+  const going = user ? friendGoingCounts(user.id) : {};
+  const events = listEvents({ status: "published" }).map((event) => ({
+    ...event,
+    friendsGoing: going[event.id] ?? 0,
+  }));
   const places = listPlaces({ status: "published" });
   const categories = listCategories();
 
   return (
-    <Explorer
+    <AppExperience
+      user={user}
       events={events}
       places={places}
       categories={categories}

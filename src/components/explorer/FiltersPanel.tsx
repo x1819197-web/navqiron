@@ -4,6 +4,7 @@ import { CalendarDays, MapPin } from "lucide-react";
 import { CategoryIcon } from "./CategoryIcon";
 import type { DateRange, Tab } from "./types";
 import type { Category } from "@/lib/types";
+import { lightenHex } from "@/lib/colors";
 
 interface FiltersPanelProps {
   tab: Tab;
@@ -34,8 +35,8 @@ export function FiltersPanel({
   onDateRangeChange,
 }: FiltersPanelProps) {
   return (
-    <div className="shrink-0 border-y border-line/70 bg-paper px-4 pb-3.5 pt-3 sm:px-6 lg:px-5">
-      <div className="grid grid-cols-2 gap-1 rounded-2xl border border-line/70 bg-cream-deep/60 p-1">
+    <div className="shrink-0 border-y border-white/8 bg-paper/60 px-4 pb-3.5 pt-3 backdrop-blur sm:px-6 lg:px-5">
+      <div className="grid grid-cols-2 gap-1 rounded-2xl border border-white/8 bg-black/30 p-1">
         <TabButton
           active={tab === "events"}
           onClick={() => onTabChange("events")}
@@ -59,8 +60,8 @@ export function FiltersPanel({
             onClick={() => onCategoryChange(null)}
             className={`shrink-0 rounded-full border px-3 py-1.5 text-[11.5px] font-bold transition ${
               activeCategory === null
-                ? "border-pine bg-pine text-paper shadow-sm"
-                : "border-line/80 bg-white/60 text-ink-soft hover:border-line hover:bg-white"
+                ? "border-violet-400/60 bg-violet-500/20 text-ink shadow-[0_0_20px_-8px_rgba(139,92,246,0.9)]"
+                : "border-white/10 bg-white/[0.05] text-ink-soft hover:border-white/20 hover:bg-white/[0.08]"
             }`}
           >
             Barchasi
@@ -74,15 +75,15 @@ export function FiltersPanel({
                 onClick={() => onCategoryChange(active ? null : category.slug)}
                 className={`flex shrink-0 items-center gap-1.5 rounded-full border px-3 py-1.5 text-[11.5px] font-bold transition ${
                   active
-                    ? "border-pine bg-pine text-paper shadow-sm"
-                    : "border-line/80 bg-white/60 text-ink-soft hover:border-line hover:bg-white"
+                    ? "border-violet-400/60 bg-violet-500/20 text-ink shadow-[0_0_20px_-8px_rgba(139,92,246,0.9)]"
+                    : "border-white/10 bg-white/[0.05] text-ink-soft hover:border-white/20 hover:bg-white/[0.08]"
                 }`}
               >
                 <span
                   className="grid h-4 w-4 place-items-center rounded-full"
                   style={{
                     backgroundColor: active ? "rgba(255,255,255,0.14)" : `${category.color}1f`,
-                    color: active ? "#d8f47b" : category.color,
+                    color: active ? "#c8ff5e" : lightenHex(category.color, 0.28),
                   }}
                 >
                   <CategoryIcon name={category.icon} size={10} />
@@ -107,8 +108,8 @@ export function FiltersPanel({
               onClick={() => onDateRangeChange(option.value)}
               className={`rounded-full px-2.5 py-1 text-[10.5px] font-bold transition ${
                 dateRange === option.value
-                  ? "bg-ink text-paper"
-                  : "text-muted hover:bg-cream hover:text-ink"
+                  ? "bg-lime text-[#150d24] shadow-[0_0_18px_-6px_rgba(200,255,94,0.7)]"
+                  : "text-muted hover:bg-white/[0.06] hover:text-ink"
               }`}
             >
               {option.label}
@@ -143,14 +144,16 @@ function TabButton({
       onClick={onClick}
       aria-pressed={active}
       className={`flex h-9 items-center justify-center gap-1.5 rounded-xl px-2 text-[12px] font-bold transition ${
-        active ? "bg-paper text-ink shadow-sm" : "text-muted hover:text-ink"
+        active
+          ? "bg-gradient-to-r from-violet-600 to-fuchsia-600 text-white shadow-[0_10px_22px_-12px_rgba(139,92,246,1)]"
+          : "text-muted hover:bg-white/[0.04] hover:text-ink"
       }`}
     >
-      <span className={active ? "text-pine-soft" : "text-muted"}>{icon}</span>
+      <span className={active ? "text-white" : "text-muted"}>{icon}</span>
       {label}
       <span
         className={`rounded-full px-1.5 py-0.5 text-[9px] font-extrabold tabular-nums ${
-          active ? "bg-lime text-pine" : "bg-cream-deep text-muted"
+          active ? "bg-lime text-[#150d24]" : "bg-white/8 text-muted"
         }`}
       >
         {count}

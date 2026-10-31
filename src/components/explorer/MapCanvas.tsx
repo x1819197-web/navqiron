@@ -21,7 +21,7 @@ interface MapCanvasProps extends MapComponentProps {
 }
 
 const controlClass =
-  "grid h-9 w-9 place-items-center text-ink/75 transition hover:bg-cream hover:text-ink";
+  "grid h-9 w-9 place-items-center text-ink/75 transition hover:bg-white/10 hover:text-ink";
 
 export function MapCanvas({ apiKey, mapId, ...rest }: MapCanvasProps) {
   const [googleFailed, setGoogleFailed] = useState(false);
@@ -45,7 +45,7 @@ export function MapCanvas({ apiKey, mapId, ...rest }: MapCanvasProps) {
         <LeafletMap {...rest} onReady={handleReady} />
       )}
 
-      <div className="absolute bottom-14 right-3 z-20 flex flex-col overflow-hidden rounded-xl border border-line/80 bg-paper/90 shadow-card backdrop-blur">
+      <div className="absolute bottom-14 right-3 z-20 flex flex-col overflow-hidden rounded-xl border border-white/10 bg-[#0f0919]/90 shadow-card backdrop-blur">
         <button
           type="button"
           onClick={() => apiRef.current?.zoomIn()}
@@ -88,7 +88,7 @@ export function MapCanvas({ apiKey, mapId, ...rest }: MapCanvasProps) {
       </div>
 
       {googleFailed ? (
-        <div className="absolute left-1/2 top-20 z-20 -translate-x-1/2 rounded-full border border-line bg-paper/95 px-3 py-1.5 text-[10px] font-bold text-ink-soft shadow-card">
+        <div className="absolute left-1/2 top-20 z-20 -translate-x-1/2 rounded-full border border-white/10 bg-[#0f0919]/95 px-3 py-1.5 text-[10px] font-bold text-ink-soft shadow-card">
           Google Maps yuklanmadi — OpenStreetMap ko&apos;rsatilmoqda
         </div>
       ) : null}
@@ -101,7 +101,7 @@ function MapLoading() {
     <div className="absolute inset-0 grid place-items-center bg-cream-deep">
       <div className="dot-grid absolute inset-0 opacity-40" />
       <div className="relative flex flex-col items-center gap-2 text-muted">
-        <span className="grid h-10 w-10 animate-pulse place-items-center rounded-full bg-paper text-pine shadow-card">
+        <span className="grid h-10 w-10 animate-pulse place-items-center rounded-full bg-violet-500/20 text-violet-200 shadow-card">
           <MapPin size={18} />
         </span>
         <span className="text-[9px] font-extrabold uppercase tracking-[0.2em]">

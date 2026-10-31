@@ -16,7 +16,7 @@ import {
 } from "lucide-react";
 import { CategoryIcon } from "./CategoryIcon";
 import type { Selected } from "./types";
-import { darkenHex } from "@/lib/colors";
+import { darkenHex, lightenHex } from "@/lib/colors";
 import { formatCount, formatEventWhen, formatTimeRange } from "@/lib/format";
 import { iconSvg } from "@/lib/icons";
 
@@ -61,13 +61,13 @@ export function DetailPanel({ selected, onClose, onRegister, onShare }: DetailPa
         type="button"
         aria-label="Yopish"
         onClick={onClose}
-        className="fixed inset-0 z-40 bg-ink/35 backdrop-blur-[2px] lg:hidden"
+        className="fixed inset-0 z-[64] bg-black/60 backdrop-blur-[2px] lg:hidden"
       />
       <aside
         role="dialog"
         aria-modal="true"
         aria-label={title}
-        className="animate-sheet-up fixed inset-x-0 bottom-0 z-50 flex max-h-[88dvh] flex-col overflow-hidden rounded-t-[26px] bg-paper shadow-soft lg:absolute lg:inset-y-3 lg:left-auto lg:right-3 lg:top-3 lg:max-h-none lg:w-[392px] lg:animate-slide-in lg:rounded-[24px]"
+        className="animate-sheet-up fixed inset-x-0 bottom-0 z-[65] flex max-h-[88dvh] flex-col overflow-hidden rounded-t-[26px] border border-white/10 bg-paper shadow-[0_-30px_80px_-30px_rgba(0,0,0,1)] lg:absolute lg:inset-y-3 lg:left-auto lg:right-3 lg:top-3 lg:max-h-none lg:w-[392px] lg:animate-slide-in lg:rounded-[24px]"
       >
         <div
           className="relative h-[136px] shrink-0 overflow-hidden"
@@ -81,18 +81,18 @@ export function DetailPanel({ selected, onClose, onRegister, onShare }: DetailPa
             dangerouslySetInnerHTML={{ __html: iconSvg(category.icon, 156, 1.1) }}
           />
           <div className="absolute left-4 top-4 flex flex-wrap items-center gap-1.5">
-            <span className="inline-flex items-center gap-1.5 rounded-full bg-white/95 px-2.5 py-1 text-[10px] font-extrabold text-ink shadow-sm">
+            <span className="inline-flex items-center gap-1.5 rounded-full border border-white/20 bg-black/40 px-2.5 py-1 text-[10px] font-extrabold text-white backdrop-blur">
               <CategoryIcon name={category.icon} size={12} />
               {category.name}
             </span>
-            <span className="rounded-full bg-white/20 px-2.5 py-1 text-[10px] font-bold text-white backdrop-blur">
+            <span className="rounded-full border border-white/20 bg-white/15 px-2.5 py-1 text-[10px] font-bold text-white backdrop-blur">
               {isEvent ? (selected.item.isFree ? "Bepul" : selected.item.price || "Narxli") : "Foydali joy"}
             </span>
           </div>
           <button
             type="button"
             onClick={onClose}
-            className="absolute right-3 top-3 grid h-8 w-8 place-items-center rounded-full bg-white/90 text-ink shadow-sm backdrop-blur transition hover:bg-white"
+            className="absolute right-3 top-3 grid h-8 w-8 place-items-center rounded-full border border-white/20 bg-black/40 text-white backdrop-blur transition hover:bg-black/60"
             aria-label="Panelni yopish"
           >
             <X size={16} />
@@ -166,14 +166,14 @@ export function DetailPanel({ selected, onClose, onRegister, onShare }: DetailPa
           </p>
 
           {isEvent && capacity !== null ? (
-            <div className="mt-4 rounded-2xl border border-line/80 bg-cream/60 p-3.5">
+            <div className="mt-4 rounded-2xl border border-white/8 bg-white/[0.04] p-3.5">
               <div className="flex items-center justify-between text-[11px] font-bold">
                 <span className="text-ink-soft">Joylar bandligi</span>
                 <span className="tabular-nums text-ink">
                   {formatCount(registered)} / {formatCount(capacity)}
                 </span>
               </div>
-              <div className="mt-2 h-2 overflow-hidden rounded-full bg-line/80">
+              <div className="mt-2 h-2 overflow-hidden rounded-full bg-white/10">
                 <div
                   className="h-full rounded-full transition-all duration-500"
                   style={{ width: `${progress}%`, backgroundColor: color }}
@@ -188,22 +188,29 @@ export function DetailPanel({ selected, onClose, onRegister, onShare }: DetailPa
           ) : null}
 
           {isEvent && selected.item.registered > 0 ? (
-            <p className="mt-3 flex items-center gap-1.5 text-[10.5px] font-semibold text-emerald-700">
+            <p className="mt-3 flex items-center gap-1.5 text-[10.5px] font-semibold text-emerald-300">
               <Check size={12} />
               {formatCount(selected.item.registered)} nafar ishtirokchi allaqachon
               ro&apos;yxatdan o&apos;tgan
             </p>
           ) : null}
+
+          {isEvent && selected.item.friendsGoing ? (
+            <p className="mt-2 flex items-center gap-1.5 text-[10.5px] font-semibold text-violet-200">
+              <Users size={12} />
+              Do&apos;stlaringizdan {selected.item.friendsGoing} kishi boradi
+            </p>
+          ) : null}
         </div>
 
-        <div className="shrink-0 border-t border-line/80 bg-paper px-4 pb-[max(0.9rem,env(safe-area-inset-bottom))] pt-3">
+        <div className="shrink-0 border-t border-white/8 bg-paper px-4 pb-[max(0.9rem,env(safe-area-inset-bottom))] pt-3">
           <div className="flex gap-2">
             {isEvent ? (
               <button
                 type="button"
                 onClick={onRegister}
                 disabled={full}
-                className="inline-flex flex-1 items-center justify-center gap-2 rounded-xl bg-pine px-4 py-3 text-[12.5px] font-extrabold text-paper transition hover:bg-pine-soft disabled:cursor-not-allowed disabled:bg-cream-deep disabled:text-muted"
+                className="inline-flex flex-1 items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-violet-600 to-fuchsia-500 px-4 py-3 text-[12.5px] font-extrabold text-white shadow-[0_14px_32px_-18px_rgba(139,92,246,0.95)] transition hover:brightness-110 disabled:cursor-not-allowed disabled:bg-none disabled:bg-white/5 disabled:text-muted disabled:shadow-none"
               >
                 {full ? "Joylar tugagan" : "Ro'yxatdan o'tish"}
                 {full ? null : <Ticket size={15} className="text-lime" />}
@@ -213,7 +220,7 @@ export function DetailPanel({ selected, onClose, onRegister, onShare }: DetailPa
                 href={`https://3.redirect.appmetrica.yandex.com/route?end-lat=${item.lat}&end-lon=${item.lng}&ref=navqiron&appmetrica_tracking_id=1178268795219780156`}
                 target="_blank"
                 rel="noreferrer"
-                className="inline-flex flex-1 items-center justify-center gap-2 rounded-xl bg-pine px-4 py-3 text-[12.5px] font-extrabold text-paper transition hover:bg-pine-soft"
+                className="inline-flex flex-1 items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-violet-600 to-fuchsia-500 px-4 py-3 text-[12.5px] font-extrabold text-white shadow-[0_14px_32px_-18px_rgba(139,92,246,0.95)] transition hover:brightness-110"
               >
                 Yo&apos;nalish olish
                 <Navigation size={15} className="text-lime" />
@@ -222,7 +229,7 @@ export function DetailPanel({ selected, onClose, onRegister, onShare }: DetailPa
             <button
               type="button"
               onClick={onShare}
-              className="grid h-[46px] w-[46px] shrink-0 place-items-center rounded-xl border border-line bg-white text-ink-soft transition hover:border-pine/30 hover:text-pine"
+              className="grid h-[46px] w-[46px] shrink-0 place-items-center rounded-xl border border-white/10 bg-white/5 text-ink-soft transition hover:border-violet-400/40 hover:text-violet-200"
               aria-label="Ulashish"
               title="Ulashish"
             >
@@ -256,7 +263,7 @@ function MetaRow({
     <div className="flex items-start gap-2.5">
       <span
         className="mt-0.5 grid h-8 w-8 shrink-0 place-items-center rounded-xl"
-        style={{ backgroundColor: `${color}14`, color }}
+        style={{ backgroundColor: `${color}1f`, color: lightenHex(color, 0.3) }}
       >
         {icon}
       </span>

@@ -135,7 +135,7 @@ export function PlacesAdmin() {
             type="button"
             onClick={() => setEditing("new")}
             disabled={loading || categories.length === 0}
-            className="inline-flex items-center justify-center gap-2 rounded-xl bg-pine px-5 py-3 text-sm font-bold text-paper transition hover:bg-pine-soft disabled:opacity-60"
+            className="inline-flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-violet-600 to-fuchsia-500 px-5 py-3 text-sm font-bold text-white shadow-[0_16px_36px_-20px_rgba(139,92,246,1)] transition hover:brightness-110 disabled:opacity-60"
           >
             <Plus className="size-4" />
             Yangi joy
@@ -154,7 +154,7 @@ export function PlacesAdmin() {
             onChange={(e) => setQuery(e.target.value)}
           />
         </div>
-        <div className="flex items-center gap-1 rounded-xl bg-cream p-1">
+        <div className="flex items-center gap-1 rounded-xl border border-white/8 bg-black/30 p-1">
           {(
             [
               { value: "all", label: "Barchasi" },
@@ -168,7 +168,7 @@ export function PlacesAdmin() {
               onClick={() => setStatusFilter(item.value)}
               className={`rounded-lg px-3 py-2 text-xs font-bold transition ${
                 statusFilter === item.value
-                  ? "bg-paper text-pine shadow-card"
+                  ? "bg-gradient-to-r from-violet-600 to-fuchsia-600 text-white shadow-card"
                   : "text-muted hover:text-ink"
               }`}
             >
@@ -179,7 +179,7 @@ export function PlacesAdmin() {
       </div>
 
       {error ? (
-        <p className="rounded-2xl border border-red-200 bg-red-50 px-5 py-4 text-sm font-semibold text-red-600">
+        <p className="rounded-2xl border border-rose-400/25 bg-rose-500/10 px-5 py-4 text-sm font-semibold text-rose-300">
           {error}
         </p>
       ) : null}
@@ -205,7 +205,7 @@ export function PlacesAdmin() {
             {filtered.map((place) => (
               <li
                 key={place.id}
-                className="flex flex-col gap-3 px-4 py-4 transition hover:bg-cream/40 sm:flex-row sm:items-center sm:px-5"
+                className="flex flex-col gap-3 px-4 py-4 transition hover:bg-white/[0.03] sm:flex-row sm:items-center sm:px-5"
               >
                 <span
                   className="grid size-11 shrink-0 place-items-center rounded-xl border-2 bg-paper"
@@ -237,7 +237,7 @@ export function PlacesAdmin() {
                     href={`/?place=${encodeURIComponent(place.slug)}`}
                     target="_blank"
                     rel="noreferrer"
-                    className="grid size-9 place-items-center rounded-xl bg-cream text-ink-soft transition hover:bg-cream-deep"
+                    className="grid size-9 place-items-center rounded-xl bg-white/[0.06] text-ink-soft transition hover:bg-white/10"
                     title="Saytda ko'rish"
                   >
                     <ExternalLink className="size-4" />
@@ -245,7 +245,7 @@ export function PlacesAdmin() {
                   <button
                     type="button"
                     onClick={() => setEditing(place)}
-                    className="grid size-9 place-items-center rounded-xl bg-cream text-ink-soft transition hover:bg-cream-deep"
+                    className="grid size-9 place-items-center rounded-xl bg-white/[0.06] text-ink-soft transition hover:bg-white/10"
                     title="Tahrirlash"
                   >
                     <Pencil className="size-4" />
@@ -253,7 +253,7 @@ export function PlacesAdmin() {
                   <button
                     type="button"
                     onClick={() => setDeleting(place)}
-                    className="grid size-9 place-items-center rounded-xl bg-red-50 text-red-600 transition hover:bg-red-100"
+                    className="grid size-9 place-items-center rounded-xl bg-rose-500/10 text-rose-300 transition hover:bg-rose-500/15"
                     title="O'chirish"
                   >
                     <Trash2 className="size-4" />
@@ -500,7 +500,7 @@ function PlaceFormDrawer({
         </div>
 
         {formError ? (
-          <p className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-semibold text-red-600">
+          <p className="rounded-xl border border-rose-400/25 bg-rose-500/10 px-4 py-3 text-sm font-semibold text-rose-300">
             {formError}
           </p>
         ) : null}
@@ -509,14 +509,14 @@ function PlaceFormDrawer({
           <button
             type="button"
             onClick={onClose}
-            className="rounded-xl bg-cream px-4 py-2.5 text-sm font-bold text-ink-soft transition hover:bg-cream-deep"
+            className="rounded-xl bg-white/[0.06] px-4 py-2.5 text-sm font-bold text-ink-soft transition hover:bg-white/10"
           >
             Bekor qilish
           </button>
           <button
             type="submit"
             disabled={pending}
-            className="inline-flex items-center justify-center gap-2 rounded-xl bg-pine px-5 py-2.5 text-sm font-bold text-paper transition hover:bg-pine-soft disabled:opacity-60"
+            className="inline-flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-violet-600 to-fuchsia-500 px-5 py-2.5 text-sm font-bold text-white shadow-[0_16px_36px_-20px_rgba(139,92,246,1)] transition hover:brightness-110 disabled:opacity-60"
           >
             {pending ? <Loader2 className="size-4 animate-spin" /> : null}
             {pending ? "Saqlanmoqda…" : initial ? "Saqlash" : "Joy qo'shish"}

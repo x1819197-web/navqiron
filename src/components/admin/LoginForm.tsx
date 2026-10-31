@@ -31,11 +31,11 @@ export function LoginForm() {
 
   return (
     <main className="grid min-h-dvh place-items-center bg-cream px-4 py-10">
-      <div className="grid w-full max-w-4xl overflow-hidden rounded-5xl border border-line bg-paper shadow-soft lg:grid-cols-[1fr_1.1fr]">
-        <div className="relative hidden flex-col justify-between overflow-hidden bg-pine p-10 text-paper lg:flex">
+      <div className="grid w-full max-w-4xl overflow-hidden rounded-5xl border border-white/10 bg-paper shadow-soft lg:grid-cols-[1fr_1.1fr]">
+        <div className="relative hidden flex-col justify-between overflow-hidden bg-[linear-gradient(150deg,#4c1d95_0%,#2a1060_52%,#160c2e_100%)] p-10 text-white lg:flex">
           <div className="dot-grid pointer-events-none absolute inset-0 opacity-20" />
           <div className="relative flex items-center gap-3">
-            <span className="grid size-10 place-items-center rounded-xl bg-lime text-lg font-black text-pine">
+            <span className="grid size-10 place-items-center rounded-xl bg-lime text-lg font-black text-[#150d24]">
               N
             </span>
             <span className="font-display text-xl font-bold tracking-tight">Navqiron</span>
@@ -47,19 +47,19 @@ export function LoginForm() {
             <h1 className="mt-4 font-display text-4xl leading-tight font-bold text-balance">
               Yunusobod yoshlari uchun platforma
             </h1>
-            <p className="mt-4 max-w-sm text-sm leading-relaxed text-paper/70">
+            <p className="mt-4 max-w-sm text-sm leading-relaxed text-white/70">
               Tadbirlar, musobaqalar va foydali joylarni bitta joydan boshqaring. Har bir
               o&apos;zgarish xaritada bir zumda ko&apos;rinadi.
             </p>
           </div>
-          <p className="relative text-xs text-paper/45">
+          <p className="relative text-xs text-white/45">
             © {new Date().getFullYear()} Navqiron · Yunusobod tumani
           </p>
         </div>
 
         <div className="p-8 sm:p-12">
           <div className="mb-8 flex items-center gap-3 lg:hidden">
-            <span className="grid size-9 place-items-center rounded-xl bg-pine text-sm font-black text-lime">
+            <span className="grid size-9 place-items-center rounded-xl bg-gradient-to-br from-violet-500 to-fuchsia-600 text-sm font-black text-white">
               N
             </span>
             <span className="font-display text-lg font-bold">Navqiron</span>
@@ -102,7 +102,7 @@ export function LoginForm() {
             </label>
 
             {error ? (
-              <p className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-semibold text-red-600">
+              <p className="rounded-xl border border-rose-400/25 bg-rose-500/10 px-4 py-3 text-sm font-semibold text-rose-300">
                 {error}
               </p>
             ) : null}
@@ -110,7 +110,7 @@ export function LoginForm() {
             <button
               type="submit"
               disabled={pending}
-              className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-pine px-5 py-3 text-sm font-bold text-paper transition hover:bg-pine-soft disabled:opacity-60"
+              className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-violet-600 to-fuchsia-500 px-5 py-3 text-sm font-bold text-white shadow-[0_16px_36px_-20px_rgba(139,92,246,1)] transition hover:brightness-110 disabled:opacity-60"
             >
               {pending ? <Loader2 className="size-4 animate-spin" /> : null}
               {pending ? "Kirilmoqda…" : "Kirish"}
@@ -118,9 +118,9 @@ export function LoginForm() {
             </button>
           </form>
 
-          <p className="mt-6 rounded-xl bg-cream px-4 py-3 text-xs leading-relaxed text-muted">
-            Demo hisob: <strong className="text-ink-soft">admin@navqiron.uz</strong> · parol:{" "}
-            <strong className="text-ink-soft">navqiron2026</strong>
+          <p className="mt-6 rounded-xl border border-white/8 bg-white/[0.04] px-4 py-3 text-xs leading-relaxed text-muted">
+            Demo hisob: <strong className="text-ink">admin@navqiron.uz</strong> · parol:{" "}
+            <strong className="text-ink">navqiron2026</strong>
           </p>
         </div>
       </div>

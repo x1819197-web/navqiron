@@ -70,10 +70,55 @@ CREATE TABLE IF NOT EXISTS registrations (
   UNIQUE (event_id, phone)
 );
 
+CREATE TABLE IF NOT EXISTS users (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  name TEXT NOT NULL,
+  phone TEXT NOT NULL UNIQUE,
+  password_hash TEXT NOT NULL,
+  created_at TEXT NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS friendships (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  requester_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  addressee_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  state TEXT NOT NULL DEFAULT 'requested' CHECK (state IN ('requested', 'accepted', 'blocked')),
+  created_at TEXT NOT NULL,
+  responded_at TEXT,
+  UNIQUE (requester_id, addressee_id)
+);
+
+CREATE TABLE IF NOT EXISTS notifications (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  type TEXT NOT NULL,
+  title TEXT NOT NULL DEFAULT '',
+  body TEXT NOT NULL DEFAULT '',
+  event_id INTEGER,
+  from_user_id INTEGER,
+  read_at TEXT,
+  created_at TEXT NOT NULL
+);
+
 CREATE INDEX IF NOT EXISTS idx_events_status_starts ON events(status, starts_at);
 CREATE INDEX IF NOT EXISTS idx_places_status ON places(status);
 CREATE INDEX IF NOT EXISTS idx_registrations_event ON registrations(event_id);
+CREATE INDEX IF NOT EXISTS idx_friendships_pair ON friendships(requester_id, addressee_id, state);
+CREATE INDEX IF NOT EXISTS idx_notifications_user ON notifications(user_id, created_at);
 `;
+
+function ensureColumn(
+  database: DatabaseSync,
+  table: string,
+  column: string,
+  definition: string,
+): void {
+  const columns = database.prepare(`PRAGMA table_info(${table})`).all() as {
+    name?: unknown;
+  }[];
+  if (columns.some((item) => String(item.name) === column)) return;
+  database.exec(`ALTER TABLE ${table} ADD COLUMN ${column} ${definition}`);
+}
 
 function createDatabase(): DatabaseSync {
   const file = process.env.DATABASE_PATH || path.join(process.cwd(), "data", "navqiron.db");
@@ -82,6 +127,10 @@ function createDatabase(): DatabaseSync {
   database.exec("PRAGMA journal_mode = WAL;");
   database.exec("PRAGMA foreign_keys = ON;");
   database.exec(SCHEMA);
+  ensureColumn(database, "users", "free_until", "TEXT");
+  ensureColumn(database, "users", "free_note", "TEXT");
+  ensureColumn(database, "users", "free_lat", "REAL");
+  ensureColumn(database, "users", "free_lng", "REAL");
   seedDatabase(database);
   return database;
 }

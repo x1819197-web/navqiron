@@ -12,9 +12,11 @@ import type {
   Boundary,
   Category,
   EventItem,
+  FreeFriend,
   MapPoint,
   PlaceItem,
   TransitStop,
+  UserAccount,
 } from "@/lib/types";
 import {
   formatDateShort,
@@ -32,6 +34,14 @@ interface ExplorerProps {
   boundary: Boundary | null;
   googleApiKey: string;
   googleMapId: string;
+  tab: Tab;
+  onTabChange(tab: Tab): void;
+  user: UserAccount | null;
+  onProfile(): void;
+  freeFriends: FreeFriend[];
+  onOpenFriends(): void;
+  focusEventId: number | null;
+  onFocusHandled(): void;
 }
 
 export function Explorer({
@@ -41,13 +51,20 @@ export function Explorer({
   boundary,
   googleApiKey,
   googleMapId,
+  tab,
+  onTabChange,
+  user,
+  onProfile,
+  freeFriends,
+  onOpenFriends,
+  focusEventId,
+  onFocusHandled,
 }: ExplorerProps) {
   const [eventList, setEventList] = useState<EventItem[]>(events);
-  const [tab, setTab] = useState<Tab>("events");
   const [activeCategory, setActiveCategory] = useState<string | null>(null);
   const [dateRange, setDateRange] = useState<DateRange>("all");
   const [query, setQuery] = useState("");
-  const [layers, setLayers] = useState<LayerState>({ event: true, place: true });
+  const [layers, setLayers] = useState<LayerState>({ event: true, place: true, friend: true });
   const [selected, setSelected] = useState<{ kind: "event" | "place"; id: number } | null>(
     null,
   );
@@ -225,8 +242,23 @@ export function Explorer({
     return () => window.clearTimeout(timer);
   }, [toast]);
 
+  useEffect(() => {
+    if (!focusEventId) return;
+    const item = eventList.find((event) => event.id === focusEventId);
+    if (item) {
+      setSelected({ kind: "event", id: item.id });
+      window.setTimeout(() => {
+        document
+          .getElementById("map-section")
+          ?.scrollIntoView({ behavior: "smooth", block: "center" });
+      }, 60);
+    }
+    onFocusHandled();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [focusEventId]);
+
   function handleTabChange(nextTab: Tab) {
-    setTab(nextTab);
+    onTabChange(nextTab);
     setActiveCategory(null);
     setLayers((current) => ({
       ...current,
@@ -234,7 +266,7 @@ export function Explorer({
     }));
   }
 
-  function handleToggleLayer(kind: "event" | "place") {
+  function handleToggleLayer(kind: "event" | "place" | "friend") {
     setLayers((current) => ({ ...current, [kind]: !current[kind] }));
   }
 
@@ -284,12 +316,19 @@ export function Explorer({
   }
 
   return (
-    <main className="min-h-dvh bg-cream lg:h-dvh lg:overflow-hidden lg:p-3">
+    <main className="min-h-dvh bg-cream pb-[92px] lg:h-dvh lg:overflow-hidden lg:p-3">
       <div className="mx-auto flex min-h-dvh w-full max-w-[1720px] flex-col lg:grid lg:h-full lg:min-h-0 lg:grid-cols-[430px_minmax(0,1fr)] lg:gap-3">
         <aside className="contents lg:flex lg:min-h-0 lg:flex-col lg:overflow-hidden lg:rounded-[30px] lg:border lg:border-line/80 lg:bg-paper lg:shadow-soft">
-          <HeaderPanel query={query} onQueryChange={setQuery} stats={stats} />
+          <HeaderPanel
+            query={query}
+            onQueryChange={setQuery}
+            stats={stats}
+            user={user}
+            onProfile={onProfile}
+            onFriends={onOpenFriends}
+          />
 
-          <div className="order-3 flex flex-col lg:min-h-0 lg:flex-1">
+          <div id="list-section" className="order-3 flex flex-col lg:min-h-0 lg:flex-1">
             <FiltersPanel
               tab={tab}
               onTabChange={handleTabChange}
@@ -327,12 +366,15 @@ export function Explorer({
         <MapSection
           points={points}
           stops={stops}
+          friends={freeFriends}
+          friendsEnabled={Boolean(user)}
           selectedKey={selectedKey}
           selected={selectedItem}
           boundary={boundary}
           apiKey={googleApiKey}
           mapId={googleMapId}
           onSelect={handleSelectPoint}
+          onSelectFriend={onOpenFriends}
           onCloseDetail={() => setSelected(null)}
           onRegister={() => {
             if (selectedItem?.kind === "event") setRegisterEvent(selectedItem.item);
@@ -348,14 +390,15 @@ export function Explorer({
       {registerEvent ? (
         <RegisterDialog
           event={registerEvent}
+          user={user}
           onClose={() => setRegisterEvent(null)}
           onSuccess={handleRegistered}
         />
       ) : null}
 
       {toast ? (
-        <div className="animate-pop fixed bottom-6 left-1/2 z-[90] flex -translate-x-1/2 items-center gap-2 rounded-full bg-ink px-4 py-2.5 text-[11.5px] font-bold text-paper shadow-soft">
-          <span className="grid h-5 w-5 place-items-center rounded-full bg-lime text-pine">
+        <div className="animate-pop fixed bottom-24 left-1/2 z-[90] flex -translate-x-1/2 items-center gap-2 rounded-full border border-white/10 bg-[#160e28]/95 px-4 py-2.5 text-[11.5px] font-bold text-ink shadow-soft backdrop-blur lg:bottom-6">
+          <span className="grid h-5 w-5 place-items-center rounded-full bg-lime text-[#150d24]">
             <Check size={12} strokeWidth={3} />
           </span>
           {toast}

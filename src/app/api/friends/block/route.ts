@@ -1,0 +1,25 @@
+import { fail, json, preflight, readJson } from "@/lib/http";
+import { blockUser, unblockUser } from "@/lib/friends";
+import { getUserSession } from "@/lib/user-auth";
+
+export const runtime = "nodejs";
+export const dynamic = "force-dynamic";
+
+export async function POST(req: Request) {
+  const viewer = await getUserSession();
+  if (!viewer) return fail("Avval tizimga kiring", 401);
+
+  const body = await readJson(req);
+  if (!body) return fail("JSON so'rov yuborilishi kerak", 400);
+  const userId = typeof body.userId === "number" ? Math.floor(body.userId) : 0;
+  const action = body.action === "unblock" ? "unblock" : "block";
+  if (!userId) return fail("Foydalanuvchi tanlanmadi", 422);
+
+  const ok = action === "unblock" ? unblockUser(viewer.id, userId) : blockUser(viewer.id, userId);
+  if (!ok) return fail("Amalni bajarib bo'lmadi", 400);
+  return json({ data: { ok: true, action } });
+}
+
+export function OPTIONS() {
+  return preflight();
+}

@@ -4,19 +4,20 @@ import { useEffect, useRef, useState } from "react";
 import { Check, Loader2, Phone, User, X } from "lucide-react";
 import { CategoryIcon } from "./CategoryIcon";
 import { formatEventWhen } from "@/lib/format";
-import type { EventItem } from "@/lib/types";
+import type { EventItem, UserAccount } from "@/lib/types";
 
 interface RegisterDialogProps {
   event: EventItem;
+  user?: UserAccount | null;
   onClose(): void;
   onSuccess(registered: number): void;
 }
 
 type Status = "idle" | "loading" | "success";
 
-export function RegisterDialog({ event, onClose, onSuccess }: RegisterDialogProps) {
-  const [name, setName] = useState("");
-  const [phone, setPhone] = useState("");
+export function RegisterDialog({ event, user, onClose, onSuccess }: RegisterDialogProps) {
+  const [name, setName] = useState(user?.name ?? "");
+  const [phone, setPhone] = useState(user?.phone.replace(/^\+998/, "") ?? "");
   const [status, setStatus] = useState<Status>("idle");
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [formError, setFormError] = useState<string | null>(null);
@@ -82,9 +83,9 @@ export function RegisterDialog({ event, onClose, onSuccess }: RegisterDialogProp
         type="button"
         aria-label="Yopish"
         onClick={() => status !== "loading" && onClose()}
-        className="absolute inset-0 bg-ink/45 backdrop-blur-[3px]"
+        className="absolute inset-0 bg-black/65 backdrop-blur-[3px]"
       />
-      <div className="animate-sheet-up relative w-full max-w-md overflow-hidden rounded-t-[26px] bg-paper shadow-soft sm:animate-pop sm:rounded-[26px]">
+      <div className="animate-sheet-up relative w-full max-w-md overflow-hidden rounded-t-[26px] border border-white/10 bg-paper shadow-soft sm:animate-pop sm:rounded-[26px]">
         <div
           className="h-1.5 w-full"
           style={{ backgroundColor: event.category.color }}
@@ -123,7 +124,7 @@ export function RegisterDialog({ event, onClose, onSuccess }: RegisterDialogProp
 
           {status === "success" ? (
             <div className="animate-fade-up py-4 text-center">
-              <div className="mx-auto grid h-16 w-16 place-items-center rounded-full bg-lime text-pine">
+              <div className="mx-auto grid h-16 w-16 place-items-center rounded-full bg-lime text-[#150d24]">
                 <Check size={30} strokeWidth={2.5} />
               </div>
               <p className="mt-4 font-display text-[18px] font-bold text-ink">
@@ -133,7 +134,7 @@ export function RegisterDialog({ event, onClose, onSuccess }: RegisterDialogProp
                 {event.title} uchun joyingiz band qilindi. Tadbir eslatmasi Telegram
                 orqali yuboriladi.
               </p>
-              <div className="mt-4 rounded-2xl border border-line/80 bg-cream/60 px-3 py-2.5 text-[11.5px] font-semibold text-ink-soft">
+              <div className="mt-4 rounded-2xl border border-white/8 bg-white/[0.04] px-3 py-2.5 text-[11.5px] font-semibold text-ink-soft">
                 Ishtirokchilar:{" "}
                 <span className="font-extrabold text-ink">{registered}</span>
                 {event.capacity ? ` / ${event.capacity}` : ""}
@@ -141,7 +142,7 @@ export function RegisterDialog({ event, onClose, onSuccess }: RegisterDialogProp
               <button
                 type="button"
                 onClick={onClose}
-                className="mt-4 w-full rounded-xl bg-pine px-4 py-3 text-[12.5px] font-extrabold text-paper transition hover:bg-pine-soft"
+                className="mt-4 w-full rounded-xl bg-gradient-to-r from-violet-600 to-fuchsia-500 px-4 py-3 text-[12.5px] font-extrabold text-white shadow-[0_14px_32px_-18px_rgba(139,92,246,0.95)] transition hover:brightness-110"
               >
                 Yopish
               </button>
@@ -181,7 +182,7 @@ export function RegisterDialog({ event, onClose, onSuccess }: RegisterDialogProp
                     Telefon raqam
                   </label>
                   <div className="flex items-center gap-2">
-                    <span className="inline-flex h-[42px] items-center rounded-xl border border-line bg-cream px-3 text-[12.5px] font-bold text-ink-soft">
+                    <span className="inline-flex h-[42px] items-center rounded-xl border border-white/10 bg-white/5 px-3 text-[12.5px] font-bold text-ink-soft">
                       +998
                     </span>
                     <div className="relative flex-1">
@@ -206,7 +207,7 @@ export function RegisterDialog({ event, onClose, onSuccess }: RegisterDialogProp
               </div>
 
               {formError ? (
-                <p className="mt-3 rounded-xl border border-red-100 bg-red-50 px-3 py-2 text-[11px] font-semibold text-red-600">
+                <p className="mt-3 rounded-xl border border-rose-400/25 bg-rose-500/10 px-3 py-2 text-[11px] font-semibold text-rose-300">
                   {formError}
                 </p>
               ) : null}
@@ -214,7 +215,7 @@ export function RegisterDialog({ event, onClose, onSuccess }: RegisterDialogProp
               <button
                 type="submit"
                 disabled={status === "loading"}
-                className="mt-4 flex w-full items-center justify-center gap-2 rounded-xl bg-pine px-4 py-3 text-[12.5px] font-extrabold text-paper transition hover:bg-pine-soft disabled:cursor-wait disabled:opacity-70"
+                className="mt-4 flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-violet-600 to-fuchsia-500 px-4 py-3 text-[12.5px] font-extrabold text-white shadow-[0_14px_32px_-18px_rgba(139,92,246,0.95)] transition hover:brightness-110 disabled:cursor-wait disabled:opacity-70"
               >
                 {status === "loading" ? (
                   <>

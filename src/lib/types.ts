@@ -30,6 +30,7 @@ export interface EventItem {
   status: Status;
   createdAt: string;
   category: Category;
+  friendsGoing?: number;
 }
 
 export interface PlaceItem {
@@ -60,6 +61,78 @@ export interface AdminUser {
   id: number;
   email: string;
   name: string;
+}
+
+export interface UserAccount {
+  id: number;
+  name: string;
+  phone: string;
+  createdAt: string;
+}
+
+export interface FriendSummary {
+  id: number;
+  name: string;
+  phone: string;
+  initials: string;
+  since: string;
+  freeUntil: string | null;
+  freeNote: string | null;
+}
+
+export interface FriendRequestItem {
+  id: number;
+  user: FriendSummary;
+  createdAt: string;
+}
+
+export interface FreeFriend {
+  id: number;
+  name: string;
+  initials: string;
+  lat: number;
+  lng: number;
+  note: string;
+  until: string;
+}
+
+export interface FreeStatus {
+  until: string;
+  note: string;
+  lat: number | null;
+  lng: number | null;
+}
+
+export type Relation = "self" | "none" | "friends" | "incoming" | "outgoing" | "blocked";
+
+export interface PublicUser {
+  id: number;
+  name: string;
+  initials: string;
+  phone: string | null;
+  relation: Relation;
+  freeUntil: string | null;
+  freeNote: string | null;
+}
+
+export interface AppNotification {
+  id: number;
+  type: string;
+  title: string;
+  body: string;
+  eventId: number | null;
+  createdAt: string;
+  readAt: string | null;
+}
+
+export interface FriendsOverview {
+  friends: FriendSummary[];
+  incoming: FriendRequestItem[];
+  outgoing: FriendRequestItem[];
+  free: FreeFriend[];
+  freeStatus: FreeStatus | null;
+  notifications: AppNotification[];
+  unread: number;
 }
 
 export interface MapPoint {

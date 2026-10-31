@@ -3,7 +3,7 @@
 import "leaflet/dist/leaflet.css";
 import { useEffect, useRef, useState } from "react";
 import type { LayerGroup, Map as LeafletInstance } from "leaflet";
-import { markerHtml } from "@/lib/marker";
+import { markerHtml, friendMarkerHtml } from "@/lib/marker";
 import { transitPopupHtml, transitStopHtml } from "@/lib/transit-view";
 import type { MapComponentProps } from "./map-types";
 
@@ -26,9 +26,11 @@ const TILE_SOURCES = [
 export default function LeafletMap({
   points,
   stops,
+  friends,
   selectedKey,
   boundary,
   onSelect,
+  onSelectFriend,
   onMapClick,
   onReady,
   onError,
@@ -40,12 +42,13 @@ export default function LeafletMap({
   const lastMarkerClick = useRef(0);
   const [ready, setReady] = useState(false);
 
-  const callbacks = useRef({ onSelect, onMapClick, onReady, onError });
-  callbacks.current = { onSelect, onMapClick, onReady, onError };
+  const callbacks = useRef({ onSelect, onSelectFriend, onMapClick, onReady, onError });
+  callbacks.current = { onSelect, onSelectFriend, onMapClick, onReady, onError };
 
   useEffect(() => {
     let cancelled = false;
     let resizeObserver: ResizeObserver | null = null;
+    let fitTimer: number | null = null;
 
     (async () => {
       try {
@@ -99,22 +102,23 @@ export default function LeafletMap({
           ];
           L.polygon([world, latlngs], {
             stroke: false,
-            fillColor: "#0c352a",
-            fillOpacity: 0.12,
+            fillColor: "#07040f",
+            fillOpacity: 0.45,
             interactive: false,
           }).addTo(map);
           L.polygon(latlngs, {
-            color: "#fffdf7",
-            weight: 6,
-            opacity: 0.7,
-            fillColor: "#d8f47b",
+            color: "#a78bfa",
+            weight: 2.5,
+            opacity: 0.9,
+            fillColor: "#7c3aed",
             fillOpacity: 0.14,
             interactive: false,
           }).addTo(map);
           L.polygon(latlngs, {
-            color: "#0c352a",
-            weight: 1.8,
-            opacity: 0.55,
+            color: "#c8ff5e",
+            weight: 1.2,
+            opacity: 0.5,
+            dashArray: "5 7",
             fill: false,
             className: "district-edge",
             interactive: false,
@@ -155,7 +159,7 @@ export default function LeafletMap({
         });
 
         setReady(true);
-        window.setTimeout(() => {
+        fitTimer = window.setTimeout(() => {
           map.invalidateSize();
           if (latlngs) map.fitBounds(latlngs, { padding: [28, 28] });
         }, 100);
@@ -171,6 +175,7 @@ export default function LeafletMap({
 
     return () => {
       cancelled = true;
+      if (fitTimer !== null) window.clearTimeout(fitTimer);
       resizeObserver?.disconnect();
       mapRef.current?.remove();
       mapRef.current = null;
@@ -274,6 +279,39 @@ export default function LeafletMap({
       if (map.hasLayer(busLayer)) map.removeLayer(busLayer);
     };
   }, [stops, ready]);
+
+  useEffect(() => {
+    const L = leafletRef.current;
+    const map = mapRef.current;
+    if (!ready || !L || !map) return;
+
+    const layer = L.layerGroup().addTo(map);
+    for (const friend of friends) {
+      const icon = L.divIcon({
+        className: "friend-marker",
+        html: friendMarkerHtml(friend),
+        iconSize: [44, 44],
+        iconAnchor: [22, 22],
+      });
+      const marker = L.marker([friend.lat, friend.lng], {
+        icon,
+        title: friend.name,
+        zIndexOffset: 600,
+      });
+      marker.on("click", (event) => {
+        lastMarkerClick.current = Date.now();
+        if (event.originalEvent) L.DomEvent.stopPropagation(event.originalEvent);
+        callbacks.current.onSelectFriend(friend.id);
+      });
+      marker.addTo(layer);
+    }
+
+    return () => {
+      if (!mapRef.current) return;
+      layer.clearLayers();
+      if (map.hasLayer(layer)) map.removeLayer(layer);
+    };
+  }, [friends, ready]);
 
   return <div ref={containerRef} className="absolute inset-0 z-0" aria-label="Yunusobod tumani xaritasi" />;
 }

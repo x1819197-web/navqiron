@@ -64,7 +64,7 @@ export function AdminDashboard({ name }: { name: string }) {
 
   return (
     <div className="space-y-4">
-      <header className="rounded-3xl border border-line bg-paper p-6 lg:p-8">
+      <header className="relative overflow-hidden rounded-3xl border border-white/8 bg-white/[0.035] p-6 lg:p-8">
         <p className="text-xs font-bold uppercase tracking-[0.24em] text-muted">Boshqaruv</p>
         <h1 className="mt-2 font-display text-3xl font-bold tracking-tight">
           Salom, {name.split(" ")[0]} 👋
@@ -76,7 +76,7 @@ export function AdminDashboard({ name }: { name: string }) {
       </header>
 
       {error ? (
-        <p className="rounded-2xl border border-red-200 bg-red-50 px-5 py-4 text-sm font-semibold text-red-600">
+        <p className="rounded-2xl border border-rose-400/25 bg-rose-500/10 px-5 py-4 text-sm font-semibold text-rose-300">
           {error}
         </p>
       ) : null}
@@ -86,39 +86,39 @@ export function AdminDashboard({ name }: { name: string }) {
           icon={<CalendarDays className="size-5" />}
           label="Faol tadbirlar"
           value={stats ? formatCount(stats.upcomingEvents) : "—"}
-          accent="bg-lime/40 text-pine"
+          accent="bg-lime/15 text-lime"
           loading={loading}
         />
         <StatCard
           icon={<Users className="size-5" />}
           label="Ro'yxatdan o'tganlar"
           value={stats ? formatCount(stats.registered) : "—"}
-          accent="bg-blue-100 text-blue-700"
+          accent="bg-sky-400/15 text-sky-300"
           loading={loading}
         />
         <StatCard
           icon={<CircleDollarSign className="size-5" />}
           label="Bepul tadbirlar"
           value={stats ? formatCount(stats.freeEvents) : "—"}
-          accent="bg-emerald-100 text-emerald-700"
+          accent="bg-emerald-400/15 text-emerald-300"
           loading={loading}
         />
         <StatCard
           icon={<MapPin className="size-5" />}
           label="Foydali joylar"
           value={stats ? formatCount(stats.places) : "—"}
-          accent="bg-purple-100 text-purple-700"
+          accent="bg-violet-400/15 text-violet-300"
           loading={loading}
         />
       </section>
 
       <section className="grid gap-4 xl:grid-cols-[1.45fr_1fr]">
-        <div className="rounded-3xl border border-line bg-paper p-5 lg:p-6">
+        <div className="rounded-3xl border border-white/8 bg-white/[0.035] p-5 lg:p-6">
           <div className="flex items-center justify-between gap-3">
             <h2 className="font-display text-lg font-bold">Yaqin tadbirlar</h2>
             <Link
               href="/admin/events"
-              className="inline-flex items-center gap-1 text-xs font-bold text-pine hover:underline"
+              className="inline-flex items-center gap-1 text-xs font-bold text-violet-300 hover:underline"
             >
               Barchasi <ArrowRight className="size-3.5" />
             </Link>
@@ -138,7 +138,7 @@ export function AdminDashboard({ name }: { name: string }) {
                   key={event.id}
                   href={`/?event=${encodeURIComponent(event.slug)}`}
                   target="_blank"
-                  className="flex items-center gap-3 rounded-2xl border border-line/70 bg-cream/40 px-3 py-3 transition hover:border-pine/25 hover:bg-cream"
+                  className="flex items-center gap-3 rounded-2xl border border-white/8 bg-white/[0.03] px-3 py-3 transition hover:border-violet-400/30 hover:bg-white/[0.06]"
                 >
                   <span
                     className="grid size-11 shrink-0 place-items-center rounded-xl text-white"
@@ -164,7 +164,7 @@ export function AdminDashboard({ name }: { name: string }) {
         </div>
 
         <div className="space-y-4">
-          <div className="rounded-3xl border border-line bg-paper p-5 lg:p-6">
+          <div className="rounded-3xl border border-white/8 bg-white/[0.035] p-5 lg:p-6">
             <div className="flex items-center justify-between gap-3">
               <h2 className="font-display text-lg font-bold">Qoralamalar</h2>
               <span className="rounded-full bg-cream px-2.5 py-1 text-xs font-bold text-ink-soft">
@@ -183,10 +183,10 @@ export function AdminDashboard({ name }: { name: string }) {
                   <Link
                     key={item.key}
                     href={item.kind === "Tadbir" ? "/admin/events" : "/admin/places"}
-                    className="flex items-center justify-between gap-3 rounded-2xl border border-line/70 px-3 py-2.5 text-sm transition hover:border-pine/25"
+                    className="flex items-center justify-between gap-3 rounded-2xl border border-white/8 px-3 py-2.5 text-sm transition hover:border-violet-400/30"
                   >
                     <span className="truncate font-semibold text-ink">{item.title}</span>
-                    <span className="shrink-0 rounded-full bg-amber-100 px-2 py-0.5 text-[11px] font-bold text-amber-700">
+                    <span className="shrink-0 rounded-full bg-amber-400/15 px-2 py-0.5 text-[11px] font-bold text-amber-300">
                       {item.kind}
                     </span>
                   </Link>
@@ -229,7 +229,7 @@ function StatCard({
   loading: boolean;
 }) {
   return (
-    <div className="flex items-center gap-4 rounded-3xl border border-line bg-paper p-5">
+    <div className="flex items-center gap-4 rounded-3xl border border-white/8 bg-white/[0.035] p-5 backdrop-blur">
       <span className={`grid size-11 shrink-0 place-items-center rounded-2xl ${accent}`}>
         {icon}
       </span>
@@ -259,14 +259,14 @@ function QuickLink({
   return (
     <Link
       href={href}
-      className="group rounded-3xl border border-line bg-pine p-5 text-paper transition hover:bg-pine-soft"
+      className="group rounded-3xl border border-white/10 bg-gradient-to-br from-violet-700 via-violet-800 to-[#1e0f3d] p-5 text-white shadow-[0_20px_50px_-30px_rgba(0,0,0,1)] transition hover:brightness-110"
     >
       <span className="flex items-center justify-between">
-        <span className="grid size-10 place-items-center rounded-xl bg-lime text-pine">{icon}</span>
+        <span className="grid size-10 place-items-center rounded-xl bg-lime text-[#150d24]">{icon}</span>
         <ArrowRight className="size-4 transition group-hover:translate-x-0.5" />
       </span>
       <span className="mt-4 block font-display text-sm font-bold">{title}</span>
-      <span className="mt-1 block text-xs leading-relaxed text-paper/60">{text}</span>
+      <span className="mt-1 block text-xs leading-relaxed text-white/70">{text}</span>
     </Link>
   );
 }

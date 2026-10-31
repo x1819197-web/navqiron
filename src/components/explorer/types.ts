@@ -10,4 +10,5 @@ export type Selected =
 export interface LayerState {
   event: boolean;
   place: boolean;
+  friend: boolean;
 }

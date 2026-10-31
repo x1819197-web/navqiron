@@ -1,5 +1,5 @@
 import { iconSvg } from "./icons";
-import type { MapPoint } from "./types";
+import type { FreeFriend, MapPoint } from "./types";
 
 const ESCAPES: Record<string, string> = {
   "&": "&amp;",
@@ -19,5 +19,13 @@ export function markerHtml(point: MapPoint, active = false): string {
   return `<div class="map-pin-wrap${active ? " is-active" : ""}" style="--pin:${point.color}" role="button" tabindex="0" aria-label="${escapeHtml(point.title)}">
     <span class="map-pin-label">${escapeHtml(point.title)}</span>
     <span class="${pinClass}">${iconSvg(point.icon, iconSize, 2.1)}</span>
+  </div>`;
+}
+
+export function friendMarkerHtml(friend: FreeFriend): string {
+  const note = friend.note ? ` · ${friend.note}` : "";
+  return `<div class="friend-pin" role="button" tabindex="0" aria-label="${escapeHtml(friend.name)}">
+    <span class="friend-pin__avatar">${escapeHtml(friend.initials)}</span>
+    <span class="friend-pin__label">${escapeHtml(friend.name)}${escapeHtml(note)}</span>
   </div>`;
 }

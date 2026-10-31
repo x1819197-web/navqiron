@@ -163,7 +163,7 @@ export function EventsAdmin() {
             type="button"
             onClick={() => setEditing("new")}
             disabled={loading || categories.length === 0}
-            className="inline-flex items-center justify-center gap-2 rounded-xl bg-pine px-5 py-3 text-sm font-bold text-paper transition hover:bg-pine-soft disabled:opacity-60"
+            className="inline-flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-violet-600 to-fuchsia-500 px-5 py-3 text-sm font-bold text-white shadow-[0_16px_36px_-20px_rgba(139,92,246,1)] transition hover:brightness-110 disabled:opacity-60"
           >
             <Plus className="size-4" />
             Yangi tadbir
@@ -182,7 +182,7 @@ export function EventsAdmin() {
             onChange={(e) => setQuery(e.target.value)}
           />
         </div>
-        <div className="flex items-center gap-1 rounded-xl bg-cream p-1">
+        <div className="flex items-center gap-1 rounded-xl border border-white/8 bg-black/30 p-1">
           {(
             [
               { value: "all", label: "Barchasi" },
@@ -196,7 +196,7 @@ export function EventsAdmin() {
               onClick={() => setStatusFilter(item.value)}
               className={`rounded-lg px-3 py-2 text-xs font-bold transition ${
                 statusFilter === item.value
-                  ? "bg-paper text-pine shadow-card"
+                  ? "bg-gradient-to-r from-violet-600 to-fuchsia-600 text-white shadow-card"
                   : "text-muted hover:text-ink"
               }`}
             >
@@ -207,7 +207,7 @@ export function EventsAdmin() {
       </div>
 
       {error ? (
-        <p className="rounded-2xl border border-red-200 bg-red-50 px-5 py-4 text-sm font-semibold text-red-600">
+        <p className="rounded-2xl border border-rose-400/25 bg-rose-500/10 px-5 py-4 text-sm font-semibold text-rose-300">
           {error}
         </p>
       ) : null}
@@ -236,7 +236,7 @@ export function EventsAdmin() {
               return (
                 <li
                   key={event.id}
-                  className="flex flex-col gap-3 px-4 py-4 transition hover:bg-cream/40 sm:flex-row sm:items-center sm:px-5"
+                  className="flex flex-col gap-3 px-4 py-4 transition hover:bg-white/[0.03] sm:flex-row sm:items-center sm:px-5"
                 >
                   <span
                     className="grid size-11 shrink-0 place-items-center rounded-xl text-white"
@@ -272,7 +272,7 @@ export function EventsAdmin() {
                       <button
                         type="button"
                         onClick={() => setRegistrationsFor(event)}
-                        className="grid size-9 place-items-center rounded-xl bg-cream text-ink-soft transition hover:bg-cream-deep"
+                        className="grid size-9 place-items-center rounded-xl bg-white/[0.06] text-ink-soft transition hover:bg-white/10"
                         title="Ro'yxatdan o'tganlar"
                       >
                         <Users className="size-4" />
@@ -281,7 +281,7 @@ export function EventsAdmin() {
                         href={`/?event=${encodeURIComponent(event.slug)}`}
                         target="_blank"
                         rel="noreferrer"
-                        className="grid size-9 place-items-center rounded-xl bg-cream text-ink-soft transition hover:bg-cream-deep"
+                        className="grid size-9 place-items-center rounded-xl bg-white/[0.06] text-ink-soft transition hover:bg-white/10"
                         title="Saytda ko'rish"
                       >
                         <ExternalLink className="size-4" />
@@ -289,7 +289,7 @@ export function EventsAdmin() {
                       <button
                         type="button"
                         onClick={() => setEditing(event)}
-                        className="grid size-9 place-items-center rounded-xl bg-cream text-ink-soft transition hover:bg-cream-deep"
+                        className="grid size-9 place-items-center rounded-xl bg-white/[0.06] text-ink-soft transition hover:bg-white/10"
                         title="Tahrirlash"
                       >
                         <Pencil className="size-4" />
@@ -297,7 +297,7 @@ export function EventsAdmin() {
                       <button
                         type="button"
                         onClick={() => setDeleting(event)}
-                        className="grid size-9 place-items-center rounded-xl bg-red-50 text-red-600 transition hover:bg-red-100"
+                        className="grid size-9 place-items-center rounded-xl bg-rose-500/10 text-rose-300 transition hover:bg-rose-500/15"
                         title="O'chirish"
                       >
                         <Trash2 className="size-4" />
@@ -611,7 +611,7 @@ function EventFormDrawer({
         </div>
 
         {formError ? (
-          <p className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-semibold text-red-600">
+          <p className="rounded-xl border border-rose-400/25 bg-rose-500/10 px-4 py-3 text-sm font-semibold text-rose-300">
             {formError}
           </p>
         ) : null}
@@ -620,14 +620,14 @@ function EventFormDrawer({
           <button
             type="button"
             onClick={onClose}
-            className="rounded-xl bg-cream px-4 py-2.5 text-sm font-bold text-ink-soft transition hover:bg-cream-deep"
+            className="rounded-xl bg-white/[0.06] px-4 py-2.5 text-sm font-bold text-ink-soft transition hover:bg-white/10"
           >
             Bekor qilish
           </button>
           <button
             type="submit"
             disabled={pending}
-            className="inline-flex items-center justify-center gap-2 rounded-xl bg-pine px-5 py-2.5 text-sm font-bold text-paper transition hover:bg-pine-soft disabled:opacity-60"
+            className="inline-flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-violet-600 to-fuchsia-500 px-5 py-2.5 text-sm font-bold text-white shadow-[0_16px_36px_-20px_rgba(139,92,246,1)] transition hover:brightness-110 disabled:opacity-60"
           >
             {pending ? <Loader2 className="size-4 animate-spin" /> : null}
             {pending ? "Saqlanmoqda…" : existing ? "Saqlash" : "Tadbir qo'shish"}
@@ -672,7 +672,7 @@ function RegistrationsDialog({
       onClose={onClose}
       width="max-w-xl"
     >
-      <div className="mb-4 flex items-center justify-between rounded-2xl bg-cream px-4 py-3">
+      <div className="mb-4 flex items-center justify-between rounded-2xl border border-white/8 bg-white/[0.04] px-4 py-3">
         <span className="text-xs font-bold text-ink-soft">
           Jami: {event.registered}
           {event.capacity ? ` / ${event.capacity} joy` : ""}
@@ -685,7 +685,7 @@ function RegistrationsDialog({
       </div>
 
       {error ? (
-        <p className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-semibold text-red-600">
+        <p className="rounded-xl border border-rose-400/25 bg-rose-500/10 px-4 py-3 text-sm font-semibold text-rose-300">
           {error}
         </p>
       ) : items === null ? (
@@ -693,14 +693,14 @@ function RegistrationsDialog({
           <Loader2 className="size-4 animate-spin" /> Yuklanmoqda…
         </p>
       ) : items.length === 0 ? (
-        <p className="rounded-2xl bg-cream px-4 py-10 text-center text-sm text-muted">
+        <p className="rounded-2xl border border-white/8 bg-white/[0.03] px-4 py-10 text-center text-sm text-muted">
           Hozircha hech kim ro&apos;yxatdan o&apos;tmagan.
         </p>
       ) : (
         <ul className="divide-y divide-line rounded-2xl border border-line">
           {items.map((item, index) => (
             <li key={item.id} className="flex items-center gap-3 px-4 py-3">
-              <span className="grid size-8 shrink-0 place-items-center rounded-full bg-cream text-xs font-bold text-ink-soft">
+              <span className="grid size-8 shrink-0 place-items-center rounded-full bg-white/[0.06] text-xs font-bold text-ink-soft">
                 {index + 1}
               </span>
               <div className="min-w-0 flex-1">
@@ -711,7 +711,7 @@ function RegistrationsDialog({
               </div>
               <a
                 href={`tel:${item.phone}`}
-                className="shrink-0 rounded-xl bg-cream px-3 py-1.5 text-xs font-bold text-pine transition hover:bg-cream-deep"
+                className="shrink-0 rounded-xl bg-violet-500/15 px-3 py-1.5 text-xs font-bold text-violet-200 transition hover:bg-violet-500/25"
               >
                 {formatPhone(item.phone)}
               </a>

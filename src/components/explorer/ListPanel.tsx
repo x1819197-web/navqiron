@@ -49,13 +49,13 @@ export function ListPanel({
           <h2 className="font-display text-[15px] font-bold tracking-[-0.01em] text-ink">
             {query ? "Qidiruv natijalari" : tab === "events" ? "Yaqin tadbirlar" : "Foydali joylar"}
           </h2>
-          <span className="rounded-full bg-lime/70 px-2 py-0.5 text-[10px] font-extrabold tabular-nums text-pine">
+          <span className="rounded-full bg-lime/90 px-2 py-0.5 text-[10px] font-extrabold tabular-nums text-[#150d24]">
             {total}
           </span>
         </div>
         {tab === "events" ? (
           <span className="flex items-center gap-1 pb-0.5 text-[10px] font-semibold text-muted">
-            <ArrowDownWideNarrow size={12} className="text-pine-soft" />
+            <ArrowDownWideNarrow size={12} className="text-violet-300" />
             Sana bo&apos;yicha
           </span>
         ) : null}
@@ -73,7 +73,7 @@ export function ListPanel({
                     {group.label}
                   </span>
                   <span className="h-px flex-1 bg-line/70" />
-                  <span className="rounded-full bg-cream px-1.5 py-0.5 text-[9px] font-extrabold tabular-nums text-muted">
+                  <span className="rounded-full bg-white/[0.06] px-1.5 py-0.5 text-[9px] font-extrabold tabular-nums text-muted">
                     {group.items.length}
                   </span>
                 </div>

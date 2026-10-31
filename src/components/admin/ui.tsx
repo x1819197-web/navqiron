@@ -30,7 +30,7 @@ export function Modal({
   }, [onClose]);
 
   return (
-    <div className="fixed inset-0 z-50 flex items-end justify-center bg-pine/40 p-0 backdrop-blur-sm sm:items-center sm:p-4">
+    <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/65 p-0 backdrop-blur-sm sm:items-center sm:p-4">
       <div
         role="dialog"
         aria-modal="true"
@@ -59,12 +59,12 @@ export function Modal({
 
 export function StatusBadge({ status }: { status: "published" | "draft" }) {
   return status === "published" ? (
-    <span className="inline-flex items-center gap-1 rounded-full bg-lime/60 px-2.5 py-0.5 text-[11px] font-bold text-pine">
-      <span className="size-1.5 rounded-full bg-pine" />
+    <span className="inline-flex items-center gap-1 rounded-full bg-lime/15 px-2.5 py-0.5 text-[11px] font-bold text-lime">
+      <span className="size-1.5 rounded-full bg-lime" />
       Nashr etilgan
     </span>
   ) : (
-    <span className="inline-flex items-center gap-1 rounded-full bg-amber-100 px-2.5 py-0.5 text-[11px] font-bold text-amber-700">
+    <span className="inline-flex items-center gap-1 rounded-full bg-amber-400/15 px-2.5 py-0.5 text-[11px] font-bold text-amber-300">
       <span className="size-1.5 rounded-full bg-amber-500" />
       Qoralama
     </span>
